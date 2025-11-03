@@ -49,3 +49,131 @@ src/
 │   └── locationUtils.js    # 위치 데이터 좌표 변환 등 지도 관련 로직 (카카오/네이버)
 └── App.jsx                 # 최상위 앱 컴포넌트
 ```
+
+## 참고!
+
+# React의 일반적인 폴더 구조
+
+React 프로젝트는 **파일을 어떻게 나누느냐**에 따라 협업 효율과 유지보수성이 크게 달라져요.
+
+아래는 많은 프로젝트에서 참고하는 기본 구조에요.
+
+```
+src/
+ ┣ assets/
+ ┣ components/
+ ┣ pages/
+ ┣ hooks/
+ ┣ context/
+ ┣ utils/
+ ┣ types/
+ ┣ apis/
+ ┣ App.tsx
+ ┗ main.tsx
+```
+
+---
+
+## 1) assets/ (정적 파일)
+
+이미지, 아이콘, CSS 같은 정적 자산을 넣어요.
+
+```
+src/assets/logo.png
+src/assets/global.css
+```
+
+---
+
+## 2) components/ (공용 컴포넌트)
+
+재사용 가능한 작은 단위 UI 컴포넌트를 모아둬요.
+
+```
+src/components/Button.tsx
+src/components/Modal.tsx
+```
+
+---
+
+## 3) pages/ (페이지 단위 컴포넌트)
+
+라우팅과 연결되는 큰 화면 컴포넌트에요.
+
+```
+src/pages/Login.tsx
+src/pages/Home.tsx
+```
+
+---
+
+## 4) hooks/ (커스텀 훅)
+
+재사용 가능한 로직을 함수로 묶어둔 폴더에요.
+
+```
+src/hooks/useAuth.ts
+src/hooks/useFetch.ts
+```
+
+---
+
+## 5) context/ (전역 상태 관리)
+
+Context API로 전역 데이터를 관리해요.
+
+```
+src/context/AuthContext.tsx
+src/context/ThemeContext.tsx
+```
+
+---
+
+## 6) utils/ (유틸 함수 모음)
+
+자주 쓰이는 공통 함수를 넣는 곳이에요.
+
+```
+src/utils/date.ts
+src/utils/formatter.ts
+```
+
+---
+
+## 7) types/ (타입 정의)
+
+TypeScript 프로젝트라면 **타입 정의**를 모아두는 곳이에요.
+
+```
+src/types/user.ts
+src/types/post.ts
+```
+
+👉 여러 컴포넌트나 API에서 공통으로 쓰이는 타입을 관리하기 좋아요.
+
+---
+
+## 8) apis/ (API 요청 관리)
+
+서버와 통신하는 코드(axios, fetch 등)를 모아두는 곳이에요.
+
+```
+src/apis/auth.ts     // 로그인, 회원가입 API
+src/apis/todo.ts     // ToDo 관련 API
+```
+
+👉 API 코드를 따로 두면 **네트워크 요청과 UI 로직을 분리**할 수 있어서 깔끔해져요.
+
+---
+
+## 9) App.tsx
+
+앱의 뼈대(루트 컴포넌트) 역할을 해요.
+
+---
+
+## 10) main.tsx
+
+React 앱의 진짜 시작점이에요
+
+여기서 App.tsx를 DOM에 붙여줘요.
