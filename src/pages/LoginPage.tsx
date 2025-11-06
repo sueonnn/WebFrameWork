@@ -1,5 +1,5 @@
 import React from "react";
-import AuthLayout from "../components/layout/AuthLayout";
+import AuthLayout from "../layout/AuthLayout";
 import AuthPanel from "../components/specific/AuthPanel";
 
 const LoginPage: React.FC = () => {
