@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { BasePlaceType, CreateGroupDTO } from '../../types/group';
 import { useGroupStore } from '../../stores/groupStore';
 import { PlusIcon, SchoolIcon, BuildingIcon, HomeIcon } from '../icons';
+import { searchPlaces } from '../../apis/kakao';
 
 const placeLabel = { SCHOOL: '학교', COMPANY: '회사', HOME: '집' } as const;
 
@@ -15,16 +16,58 @@ export default function GroupCreateForm() {
   const [desc, setDesc] = useState('');
   const [baseType, setBaseType] = useState<BasePlaceType>('SCHOOL');
   const [baseAddr, setBaseAddr] = useState('');
+  const [baseCoords, setBaseCoords] = useState<{ lat: number; lng: number } | null>(null);
 
-  const disabled = !name.trim() || !baseType;
+  const [results, setResults] = useState<any[]>([]);
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [isSelecting, setIsSelecting] = useState(false);
+
+  const disabled = !name.trim() || !baseType || !baseAddr.trim();
+
+  // 검색 자동완성 (디바운스 적용)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (isSelecting) return; // 선택 중일 때는 검색 안 함
+
+      if(baseAddr.trim().length > 1) {
+        const data = await searchPlaces(baseAddr);
+        setResults(data);
+        setShowDropdown(true);
+      }else {
+        setResults([]);
+        setShowDropdown(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [baseAddr]);
+
+  const handleSelectPlace = (place: any) => {
+    setIsSelecting(true); 
+    setBaseAddr(place.place_name);
+    setBaseCoords({ lat: parseFloat(place.y), lng: parseFloat(place.x) });
+    setResults([]);
+    setShowDropdown(false);
+
+    // 약간의 지연 후 다시 검색 허용
+    setTimeout(() => setIsSelecting(false), 400);
+  };
 
   const onSubmit = async () => {
+    if (!baseAddr.trim() || !baseCoords) {
+      alert('기본 위치를 선택해주세요.');
+      return;
+    }
+
     const payload: CreateGroupDTO = {
       name: name.trim(),
       description: desc.trim() || undefined,
       basePlaceType: baseType,
-      baseAddress: baseAddr.trim() || undefined,
+      baseAddress: baseAddr.trim(),
+      baseLatitude: baseCoords.lat,
+      baseLongitude: baseCoords.lng,
     };
+
     const id = await createGroup(payload);
     navigate(`/groups/${id}`);
   };
@@ -81,8 +124,8 @@ export default function GroupCreateForm() {
         </div>
       </div>
 
-      {/* 기본 위치 */}
-      <div>
+      {/* 기본 위치 자동완성 입력 */}
+      <div className="relative">
         <label className="mb-2 block text-sm font-medium">기본 위치</label>
         <input
           value={baseAddr}
@@ -90,6 +133,24 @@ export default function GroupCreateForm() {
           placeholder="예) 한성대학교 공학관, 성북구…"
           className="w-full rounded-xl border border-gray-300 px-3 py-3 text-sm outline-none focus:border-indigo-500"
         />
+        {showDropdown && results.length > 0 && (
+          <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
+            {results.map((place) => (
+              <li
+                key={place.id}
+                onClick={() => handleSelectPlace(place)}
+                className="cursor-pointer px-4 py-2 text-sm hover:bg-indigo-50"
+              >
+                {place.place_name}
+              </li>
+            ))}
+          </ul>
+        )}
+        {baseCoords && (
+          <p className="mt-2 text-xs text-gray-500">
+            선택된 좌표: {baseCoords.lat.toFixed(5)}, {baseCoords.lng.toFixed(5)}
+          </p>
+        )}
       </div>
 
       {/* 버튼 */}

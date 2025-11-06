@@ -1,5 +1,9 @@
-export const UsersIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+type IconProps = {
+  className?: string;
+};
+
+export const UsersIcon = ({ className }: IconProps) => (
+  <svg className={className} width="16" height="16" viewBox="0 0 24 24" fill="none">
     <path
       d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
       stroke="currentColor"

@@ -5,4 +5,6 @@ export interface CreateGroupDTO {
   description?: string;
   basePlaceType: BasePlaceType | null;
   baseAddress?: string;
+  baseLatitude?: number;  
+  baseLongitude?: number;   
 }

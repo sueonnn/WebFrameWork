@@ -3,3 +3,6 @@ export * from './UsersIcon';
 export * from './SchoolIcon';
 export * from './BuildingIcon';
 export * from './HomeIcon';
+export { default as ClockIcon } from './ClockIcon';
+export { default as LocationIcon } from './LocationIcon';
+export { default as CheckIcon } from './CheckIcon';
