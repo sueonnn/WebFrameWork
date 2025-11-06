@@ -1,12 +1,18 @@
-import { Outlet } from 'react-router-dom';
+import React from "react";
+import NavBar from "./components/common/NavBar";
+import Footer from "./components/common/Footer";
+import { Outlet } from "react-router-dom";
 
-export default function App() {
+const App: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 중앙 정렬: 가로 정중앙, 위쪽 여백 48px */}
-      <main className="mx-auto max-w-5xl px-4 pt-12">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <NavBar />
+      <main className="flex-1">
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
-}
+};
+
+export default App;
