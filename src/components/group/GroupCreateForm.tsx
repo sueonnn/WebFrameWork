@@ -8,7 +8,11 @@ import { searchPlaces } from '../../apis/kakao';
 
 const placeLabel = { SCHOOL: '학교', COMPANY: '회사', HOME: '집' } as const;
 
-export default function GroupCreateForm() {
+type Props = {
+  onSuccess: (res: { id: string; name: string; inviteCode: string }) => void;
+};
+
+export default function GroupCreateForm({ onSuccess }: Props) {
   const navigate = useNavigate();
   const { createGroup, creating } = useGroupStore();
 
@@ -68,8 +72,8 @@ export default function GroupCreateForm() {
       baseLongitude: baseCoords.lng,
     };
 
-    const id = await createGroup(payload);
-    navigate(`/groups/${id}`);
+    const { id, inviteCode } = await createGroup(payload);
+    onSuccess({ id, name: payload.name, inviteCode });
   };
 
   return (

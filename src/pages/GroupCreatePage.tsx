@@ -1,18 +1,18 @@
 import { useState } from 'react';
 import {
-  PlusIcon,
-  UsersIcon,
-  ClockIcon,
-  LocationIcon,
-  CheckIcon,
+  PlusIcon, UsersIcon, ClockIcon, LocationIcon, CheckIcon
 } from '../components/icons';
 import GroupCreateForm from '../components/group/GroupCreateForm';
 import GroupJoinForm from '../components/group/GroupJoinForm';
+import GroupCreateSuccess from '../components/group/GroupCreateSuccess';
 
 type Tab = 'create' | 'join';
 
 export default function GroupCreatePage() {
   const [tab, setTab] = useState<Tab>('create');
+
+  // 성공 상태를 페이지에서 관리
+  const [success, setSuccess] = useState<{ id: string; name: string; inviteCode: string } | null>(null);
 
   return (
     <section className="grid place-items-start">
@@ -24,29 +24,46 @@ export default function GroupCreatePage() {
         </p>
       </div>
 
-      {/* 메인 카드 */}
-      <div className="mx-auto mt-6 w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm min-h-[600px]">
-        {/* 탭 버튼 */}
-        <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
-          <button
-            onClick={() => setTab('create')}
-            className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition
-              ${tab === 'create' ? 'bg-white text-indigo-600 shadow' : 'text-gray-600'}`}
-          >
-            <PlusIcon /> <span>그룹 만들기</span>
-          </button>
-          <button
-            onClick={() => setTab('join')}
-            className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition
-              ${tab === 'join' ? 'bg-white text-indigo-600 shadow' : 'text-gray-600'}`}
-          >
-            <UsersIcon /> <span>그룹 참여하기</span>
-          </button>
+      {/* 성공 시: 카드만 단독 노출 */}
+      {success ? (
+        <div className="mx-auto mt-6 w-full max-w-2xl">
+          <GroupCreateSuccess
+            name={success.name}
+            inviteCode={success.inviteCode}
+            onGoHome={() => (location.href = '/')}
+            onShare={() => {
+              const url = `${location.origin}/join?code=${success.inviteCode}`;
+              if (navigator.share) navigator.share({ title: '그룹 초대', text: '함께 할까요?', url });
+              else { navigator.clipboard.writeText(url); alert('초대 링크가 복사되었습니다.'); }
+            }}
+          />
         </div>
+      ) : (
+        <div className="mx-auto mt-6 w-full max-w-2xl rounded-2xl border border-gray-200 bg-white p-6 shadow-sm min-h-[600px]"> {/* 메인 카드 */}
+          {/* 탭 버튼 */}
+          <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl bg-gray-100 p-1">
+            <button
+              onClick={() => setTab('create')}
+              className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition
+                ${tab === 'create' ? 'bg-white text-indigo-600 shadow' : 'text-gray-600'}`}
+            >
+              <PlusIcon /> <span>그룹 만들기</span>
+            </button>
+            <button
+              onClick={() => setTab('join')}
+              className={`flex h-10 items-center justify-center gap-2 rounded-lg text-sm font-medium transition
+                ${tab === 'join' ? 'bg-white text-indigo-600 shadow' : 'text-gray-600'}`}
+            >
+              <UsersIcon /> <span>그룹 참여하기</span>
+            </button>
+          </div>
 
-        {/* 폼 전환 */}
-        {tab === 'create' ? <GroupCreateForm /> : <GroupJoinForm />}
-      </div>
+          {/* 폼 전환 */}
+          {tab === 'create'
+              ? <GroupCreateForm onSuccess={(res) => setSuccess(res)} />
+              : <GroupJoinForm />}
+        </div>
+      )}
 
       {/* 하단 설명 카드 */}
       <div className="mx-auto mt-10 w-full max-w-2xl">
