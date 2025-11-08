@@ -23,3 +23,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# --- Firebase / Emulator (로컬 상태 & 덤프) ---
+.firebase/
+.emuldata/
+firebase-debug.log
+firebase-debug.*.log
+firestore-debug.log
+storage-debug.log
+
+# --- Functions (백엔드 빌드/환경/캐시) ---
+functions/node_modules/
+functions/lib/
+functions/.runtimeconfig.json
+functions/.env
+functions/.env.*
+functions/*.tsbuildinfo
+functions/.eslintcache
