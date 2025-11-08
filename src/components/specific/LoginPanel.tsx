@@ -3,7 +3,7 @@ import { Eye } from "lucide-react";
 
 const LoginPanel: React.FC = () => {
   return (
-    <div className="flex flex-col space-y-6 p-8">
+    <div className="flex flex-col space-y-6 p-8 ">
       <div className="flex flex-col space-y-2">
         <label htmlFor="email" className="text-sm font-medium text-gray-700">
           이메일
