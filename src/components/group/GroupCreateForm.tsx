@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import type { BasePlaceType, CreateGroupDTO } from '../../types/group';
 import { useGroupStore } from '../../stores/groupStore';
 import { PlusIcon, SchoolIcon, BuildingIcon, HomeIcon } from '../icons';
@@ -13,7 +12,6 @@ type Props = {
 };
 
 export default function GroupCreateForm({ onSuccess }: Props) {
-  const navigate = useNavigate();
   const { createGroup, creating } = useGroupStore();
 
   const [name, setName] = useState('');
