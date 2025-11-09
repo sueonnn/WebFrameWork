@@ -6,7 +6,7 @@ const AuthPanel: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
 
   return (
-    <div className="w-full max-w-sm bg-white rounded-lg shadow-xl overflow-hidden">
+    <div className="w-full max-w-sm bg-white rounded-lg shadow-xl overflow-hidden h-[650px]">
       {/* 탭 헤더 */}
       <div className="flex border-b border-gray-200">
         <button

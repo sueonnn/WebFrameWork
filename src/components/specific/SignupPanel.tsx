@@ -3,7 +3,7 @@ import { Eye } from "lucide-react";
 
 const SignupPanel: React.FC = () => {
   return (
-    <div className="flex flex-col space-y-4 p-8">
+    <div className="flex flex-col space-y-4 p-8 ">
       {/* 이름 입력 */}
       <div className="flex flex-col space-y-1">
         <label htmlFor="name" className="text-sm font-medium text-gray-700">
