@@ -4,6 +4,7 @@ import MainPage from "../pages/MainPage";
 import GroupCreatePage from "../pages/GroupCreatePage";
 import LoginPage from "../pages/LoginPage";
 import DecisionPage from "../pages/DecisionPage";
+import HistoryPage from "../pages/HistoryPage";
 
 export const router = createBrowserRouter([
   {
@@ -14,6 +15,7 @@ export const router = createBrowserRouter([
       { path: "/groups/new", element: <GroupCreatePage /> },
       // { path: '/groups/:groupId', element: <GroupDetailPage /> }, // 추후 연결
       { path: "/groups/:groupId/decide", element: <DecisionPage /> },
+      { path: '/history', element: <HistoryPage /> },
     ],
   },
   {
