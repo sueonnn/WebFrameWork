@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Station, Member } from '../components/group/types';
 import { GroupPlaceHeader } from '../components/group/GroupPlaceHeader';
 import { GroupPlaceRadiusSelector } from '../components/group/GroupPlaceRadiusSelector';
@@ -15,6 +16,8 @@ const mockMembers: Member[] = [
 ];
 
 export default function GroupPlaceRecommendPage() {
+  const nav = useNavigate();
+
   // 선택된 검색 반경
   const [radius, setRadius] = useState(500);
   // 카카오 Places 검색 결과(Station 목록)
@@ -29,7 +32,17 @@ export default function GroupPlaceRecommendPage() {
   return (
     <section className="p-6">
       {/* 상단 헤더 */}
-      <GroupPlaceHeader />
+      <div className="flex items-start justify-between gap-4">
+        <GroupPlaceHeader />
+        <button
+          type="button"
+          onClick={() => nav('/')}
+          className="h-9 shrink-0 rounded-lg border px-3 text-sm hover:bg-gray-50"
+          title="메인으로 이동"
+        >
+          ← 뒤로가기
+        </button>
+      </div>
 
       {/* 반경 선택 UI */}
       <GroupPlaceRadiusSelector
@@ -50,7 +63,7 @@ export default function GroupPlaceRecommendPage() {
           />
         </div>
 
-        {/* 우측 추천 역 리스트 */}
+        {/* 우측 추천 역 리스트 (내부에도 뒤로가기 버튼 있음) */}
         <div>
           <GroupPlaceStationList topStations={top3} />
         </div>
