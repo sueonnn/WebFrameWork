@@ -1,9 +1,59 @@
-import React from "react";
+import React, {useState, useEffect} from "react";
 import { Eye } from "lucide-react";
+import { loginEmail, resetPassword } from "../../apis/auth";
 
 const LoginPanel: React.FC = () => {
+  const [email, setEmail] = useState("");
+  const [pw, setPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null); // 성공 메시지
+
+    //  최초 진입 시 이메일 자동입력 + 메시지
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("signup") === "ok") {
+      setInfo("회원가입이 완료되었습니다. 로그인 해주세요.");
+    }
+    const prefill = sessionStorage.getItem("prefillEmail");
+    if (prefill) {
+      setEmail(prefill);
+      sessionStorage.removeItem("prefillEmail");
+    }
+  }, []);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setErr(null);
+    setBusy(true);
+    try {
+      await loginEmail(email, pw);
+      // 로그인 성공하면홈으로
+      window.location.replace("/");
+    } catch (e: any) {
+      setErr(e?.message ?? "로그인에 실패했습니다.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+   async function onReset() {
+    if (!email) return setErr("재설정 메일을 보내려면 이메일을 먼저 입력하세요.");
+    setErr(null);
+    try {
+      await resetPassword(email);
+      alert("비밀번호 재설정 메일을 보냈습니다.");
+    } catch (e: any) {
+      setErr(e?.message ?? "재설정 메일 전송에 실패했습니다.");
+    }
+  }
+
+{/* <div className="flex flex-col space-y-6 p-8 "></div> */}
   return (
-    <div className="flex flex-col space-y-6 p-8 ">
+     <form onSubmit={onSubmit} className="flex flex-col space-y-6 p-8">
+      {/* 성공 안내 */}
+      {info && <p className="text-sm text-green-600">{info}</p>}
       <div className="flex flex-col space-y-2">
         <label htmlFor="email" className="text-sm font-medium text-gray-700">
           이메일
@@ -13,6 +63,9 @@ const LoginPanel: React.FC = () => {
           type="email"
           placeholder="name@school.ac.kr"
           className="p-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+          value={email}
+          onChange={(e)=>setEmail(e.target.value)}
+          required
         />
       </div>
 
@@ -23,25 +76,38 @@ const LoginPanel: React.FC = () => {
         <div className="relative">
           <input
             id="password"
-            type="password"
+            type={showPw ? "text" : "password"}
             placeholder="8자 이상 + 숫자/문자 포함"
             className="w-full p-3 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500 pr-10"
+            value={pw}
+            onChange={(e)=>setPw(e.target.value)}
+            required
           />
-          <Eye className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer" />
+          <Eye onClick={()=>setShowPw(s=>!s)} className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 cursor-pointer" />
         </div>
       </div>
 
-      <button className="w-full py-3 mt-4 text-white font-semibold bg-indigo-600 rounded-md shadow-md hover:bg-indigo-700 transition duration-150">
-        로그인
+      {err && <p className="text-sm text-red-600">{err}</p>}  
+
+      <button type="submit" disabled={busy} className="w-full py-3 mt-4 text-white font-semibold bg-indigo-600 rounded-md shadow-md hover:bg-indigo-700 transition duration-150">
+        {busy ? "로그인 중..." : "로그인"}
       </button>
 
-      <a
+      {/* <a
         href="#"
         className="text-sm text-center text-gray-500 hover:text-indigo-600 mt-4"
       >
         비밀번호를 잊으셨나요?
-      </a>
-    </div>
+      </a> */}
+      <button
+        type="button"
+        onClick={onReset}
+        className="text-sm text-center text-gray-500 hover:text-indigo-600 mt-2"
+      >
+        비밀번호를 잊으셨나요?
+      </button>
+    {/* </div> */}
+    </form>
   );
 };
 
