@@ -26,17 +26,30 @@ const StatCard: React.FC<StatCardProps> = ({ icon, label, value, colorClasses })
 export const StatsSection: React.FC<StatsSectionProps> = ({ meetings }) => {
   const totalMeetings = meetings.length;
 
+  // 완료된 모임 (100% 완료인 것만)
   const completedMeetings = meetings.filter(
     (m) => m.status === '100% 완료'
   ).length;
 
-  const completionRate =
-    totalMeetings > 0
-      ? Math.round((completedMeetings / totalMeetings) * 100)
-      : 0;
+  // 평균 완료율 계산 (각 meeting의 status에서 숫자 추출하여 평균)
+  const completionRate = totalMeetings > 0
+    ? Math.round(
+        meetings.reduce((sum, m) => {
+          const match = m.status.match(/(\d+)%/);
+          const percentage = match ? parseInt(match[1]) : 0;
+          return sum + percentage;
+        }, 0) / totalMeetings
+      )
+    : 0;
 
-  // 임시로 '6'으로 설정, 추후 멤버 수 받아 계산하도록 수정할 예정.
-  const totalUniqueMembers = 6;
+  // 참여 멤버 수 계산 (각 meeting의 participants에서 숫자 추출 후 최댓값)
+  // 현재는 각 모임의 최대 참석자 수를 그룹의 멤버 수로 가정 -> 추후 실제 멤버 수로 변경 예정
+  const totalUniqueMembers = totalMeetings > 0
+    ? Math.max(...meetings.map(m => {
+        const match = m.participants.match(/(\d+)명/);
+        return match ? parseInt(match[1]) : 0;
+      }))
+    : 0;
 
   const stats = [
     {

@@ -1,6 +1,8 @@
 export interface Meeting {
   id: number;
   title: string;
+  // groupId: string; // 그룹 ID
+  // memberIds: string[]; // 참석한 멤버 ID 배열
   date: string;
   time: string;
   location: string;
@@ -8,6 +10,12 @@ export interface Meeting {
   status: string;
   statusClasses: string;
 }
+
+// export interface Group {
+//   id: string;
+//   name: string;
+//   memberIds: string[];  // 그룹의 전체 멤버 ID 배열
+// }
 
 export interface HistoryHeaderProps {
   onGoHome: () => void;
