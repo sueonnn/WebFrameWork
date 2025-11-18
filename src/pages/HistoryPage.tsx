@@ -4,6 +4,7 @@ import { HistoryHeader } from '../components/specific/history/HistoryHeader';
 import { StatsSection } from '../components/specific/history/StatsSection';
 import { FilterControls } from '../components/specific/history/FilterControls';
 import { MeetingList } from '../components/specific/history/MeetingList';
+import { compareDates } from '../components/specific/history/dateUtils';
 import { DUMMY_MEETINGS } from '../constants/mockData';
 
 export default function HistoryPage() {
@@ -20,29 +21,33 @@ export default function HistoryPage() {
 
   const sortOptions = ['최신순', '오래된순', '완료', '미완료'];
 
+  // 그룹 필터링
   const filteredByGroup = DUMMY_MEETINGS.filter((meeting) =>
     selectedGroup === '전체' ? true : meeting.title === selectedGroup
   );
 
-  const filteredMeetings = [...filteredByGroup].filter((meeting) => {
-    // 상태 필터링
-    if (sortOption === '완료') {
-      return meeting.status === '100% 완료';
-    }
-    if (sortOption === '미완료') {
-      return meeting.status !== '100% 완료';
-    }
-    return true;
-  }).sort((a, b) => {
-    // 날짜 정렬 (날짜 형식: "2024.01.15")
-    if (sortOption === '최신순') {
-      return b.date.localeCompare(a.date);
-    }
-    if (sortOption === '오래된순') {
-      return a.date.localeCompare(b.date);
-    }
-    return 0;
-  });
+  // 정렬 필터링
+  const filteredMeetings = [...filteredByGroup]
+    .filter((meeting) => {
+      // 상태 필터링
+      if (sortOption === '완료') {
+        return meeting.status === '100% 완료';
+      }
+      if (sortOption === '미완료') {
+        return meeting.status !== '100% 완료';
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      // 날짜 정렬
+      if (sortOption === '최신순') {
+        return compareDates(a.date, b.date, 'desc');
+      }
+      if (sortOption === '오래된순') {
+        return compareDates(a.date, b.date, 'asc');
+      }
+      return 0;
+    });
 
   return (
     <section className="bg-gray-50 py-12 min-h-screen">
