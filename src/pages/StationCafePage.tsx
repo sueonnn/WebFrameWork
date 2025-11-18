@@ -1,23 +1,12 @@
-// 역할:
-// 1) 쿼리스트링(name, lat, lng)로 역 좌표 수신 → 지도 1회 초기화
-// 2) 반경 변경 시 원/센터 업데이트
-// 3) 카카오 Places 카테고리(CE7, 카페) 검색 → 하늘색 핀 표시
-// 4) 카드/마커 클릭 시: 지도 panTo + InfoWindow(카카오맵) 열기 + 아래 상세 패널 갱신
-// 5) 하단 범례(MapLegend)로 핀 의미 안내
 import { useMemo, useRef, useEffect, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import useKakaoLoader from "../hooks/useKakaoLoader";
 import MapLegend from "../components/common/MapLegend";
 
-type Cafe = {
-  id: string;                 // kakao place id
-  name: string;
-  address?: string;
-  phone?: string;
-  pos: { lat: number; lng: number };
-  distance: number;           // m
-  placeUrl?: string;          // kakao place detail url
-};
+import type { Cafe } from "../components/group/types";
+import StationCafeHeader from "../components/group/StationCafeHeader";
+import SelectedCafePanel from "../components/group/SelectedCafePanel";
+import CafeList from "../components/group/CafeList";
 
 // 공통: SVG 핀(색상 커스터마이즈)
 const makePin = (kakao: any, fill: string) => {
@@ -42,8 +31,12 @@ export default function StationCafePage() {
   const stationName = sp.get("name") || "알 수 없는 역";
   const stationLat = parseFloat(sp.get("lat") || "0");
   const stationLng = parseFloat(sp.get("lng") || "0");
-  const center = useMemo(() => ({ lat: stationLat, lng: stationLng }), [stationLat, stationLng]);
+  const center = useMemo(
+    () => ({ lat: stationLat, lng: stationLng }),
+    [stationLat, stationLng]
+  );
 
+  // 화면을 다시 그릴 필요가 없으므로 useRef 사용
   const mapRef = useRef<any>(null);
   const mapElRef = useRef<HTMLDivElement>(null);
   const circleRef = useRef<any>(null);
@@ -53,15 +46,14 @@ export default function StationCafePage() {
   const infoRef = useRef<any>(null);
 
   const [cafes, setCafes] = useState<Cafe[]>([]);
-  const [radius, setRadius] = useState(500); // 기본 500m
   const [selected, setSelected] = useState<Cafe | null>(null);
 
   const clearCafeMarkers = () => {
-    cafeMarkerMapRef.current.forEach(mk => mk.setMap(null));
+    cafeMarkerMapRef.current.forEach((mk) => mk.setMap(null));
     cafeMarkerMapRef.current.clear();
   };
 
-  // 1) 지도 1회 초기화 + 선택 역(보라 핀) + 반경 원 생성
+  // 1) 지도 1회 초기화 + 선택 역(보라 핀) + 기본 반경 원 생성
   useEffect(() => {
     if (!ready || !mapElRef.current) return;
     const { kakao } = window as any;
@@ -83,7 +75,7 @@ export default function StationCafePage() {
 
     const circle = new kakao.maps.Circle({
       center: new kakao.maps.LatLng(center.lat, center.lng),
-      radius,
+      radius: 300, // 기본 300m 정도
       strokeWeight: 2,
       strokeColor: "#7F9CF5",
       strokeOpacity: 0.8,
@@ -104,14 +96,19 @@ export default function StationCafePage() {
     };
   }, [ready, center.lat, center.lng, stationName]);
 
-  // 2) 반경/센터 변경 시 원 + 지도 센터 업데이트
+  // 2) 카페 목록이 바뀔 때, 가장 먼 거리까지 원 반경을 자동으로 맞추기
   useEffect(() => {
-    if (!mapRef.current || !circleRef.current) return;
+    if (!circleRef.current || cafes.length === 0) return;
     const { kakao } = window as any;
-    circleRef.current.setRadius(radius);
-    circleRef.current.setPosition(new kakao.maps.LatLng(center.lat, center.lng));
-    mapRef.current.setCenter(new kakao.maps.LatLng(center.lat, center.lng));
-  }, [radius, center.lat, center.lng]);
+
+    const maxDistance = cafes[cafes.length - 1].distance || 300;
+
+    circleRef.current.setRadius(maxDistance);
+    circleRef.current.setPosition(
+      new kakao.maps.LatLng(center.lat, center.lng)
+    );
+    mapRef.current?.setCenter(new kakao.maps.LatLng(center.lat, center.lng));
+  }, [cafes, center.lat, center.lng]);
 
   // 공통 선택 핸들러: 카드/마커에서 모두 호출
   const selectCafe = (c: Cafe) => {
@@ -132,7 +129,9 @@ export default function StationCafePage() {
              style="flex:1;text-align:center;background:#6366F1;color:#fff;padding:6px 0;border-radius:8px;font-size:12px;text-decoration:none">
             장소상세
           </a>
-          <a target="_blank" href="https://map.kakao.com/link/to/${encodeURIComponent(c.name)},${c.pos.lat},${c.pos.lng}"
+          <a target="_blank" href="https://map.kakao.com/link/to/${encodeURIComponent(
+            c.name
+          )},${c.pos.lat},${c.pos.lng}"
              style="flex:1;text-align:center;background:#10B981;color:#fff;padding:6px 0;border-radius:8px;font-size:12px;text-decoration:none">
             길찾기
           </a>
@@ -145,11 +144,14 @@ export default function StationCafePage() {
       infoRef.current.open(mapRef.current, anchor);
     } else {
       // 앵커 없을 일은 거의 없지만, 안전하게 좌표로 오픈
-      infoRef.current.open(mapRef.current, new kakao.maps.Marker({ position: pos }));
+      infoRef.current.open(
+        mapRef.current,
+        new kakao.maps.Marker({ position: pos })
+      );
     }
   };
 
-  // 3) 카페 검색(카테고리 CE7) + 하늘색 핀들 렌더
+  // 3) 카페 검색(카테고리 CE7) + 역 기준 가장 가까운 15개만 하늘색 핀으로 렌더
   useEffect(() => {
     if (!ready || !mapRef.current) return;
     const { kakao } = window as any;
@@ -168,22 +170,25 @@ export default function StationCafePage() {
 
         const list: Cafe[] = results
           .map((r: any) => ({
-            id: r.id,                                              // ★ id
+            id: r.id,
             name: r.place_name,
             address: r.road_address_name || r.address_name,
             phone: r.phone,
             pos: { lat: parseFloat(r.y), lng: parseFloat(r.x) },
             distance: Number(r.distance || "0"),
-            placeUrl: r.place_url,                                 // ★ url
+            placeUrl: r.place_url,
           }))
-          .filter((c) => c.distance <= radius)
           .sort((a, b) => a.distance - b.distance);
 
-        setCafes(list);
+        // 역 기준으로 가장 가까운 15개만 사용
+        const top15 = list.slice(0, 15);
 
+        setCafes(top15);
+
+        // 마커도 top15만 렌더링
         clearCafeMarkers();
         const cafeImg = makePin(kakao, "#0EA5E9"); // 하늘색
-        list.slice(0, 20).forEach((c) => {
+        top15.forEach((c) => {
           const mk = new kakao.maps.Marker({
             position: new kakao.maps.LatLng(c.pos.lat, c.pos.lng),
             image: cafeImg,
@@ -197,40 +202,21 @@ export default function StationCafePage() {
           kakao.maps.event.addListener(mk, "click", () => selectCafe(c));
         });
       },
-      { location: loc, radius, sort: (window as any).kakao.maps.services.SortBy.DISTANCE }
+      {
+        location: loc,
+        radius: 1000, // 검색 반경: 역 기준 1km 정도 (원하면 숫자 조절)
+        sort: (window as any).kakao.maps.services.SortBy.DISTANCE,
+      }
     );
-  }, [ready, center.lat, center.lng, radius]); // radius 바뀌면 재검색
+  }, [ready, center.lat, center.lng]);
 
   return (
     <section className="p-6">
-      {/* 상단 컨트롤 */}
-      <div className="mb-4 flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-semibold">{stationName} 주변 카페</h2>
-          <p className="text-sm text-gray-500">
-            반경 {radius >= 1000 ? `${radius / 1000}km` : `${radius}m`} 기준
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <select
-            className="rounded-lg border px-2 py-1 text-sm"
-            value={radius}
-            onChange={(e) => setRadius(parseInt(e.target.value, 10))}
-          >
-            {[300, 500, 800, 1000].map((r) => (
-              <option key={r} value={r}>
-                {r >= 1000 ? `${r / 1000}km` : `${r}m`}
-              </option>
-            ))}
-          </select>
-          <button
-            onClick={() => navigate(-1)}
-            className="px-3 py-1.5 rounded-lg border hover:bg-gray-50 text-sm"
-          >
-            이전으로
-          </button>
-        </div>
-      </div>
+      <StationCafeHeader
+        stationName={stationName}
+        cafeCount={cafes.length}
+        onBack={() => navigate(-1)}
+      />
 
       {/* 좌: 지도 / 우: 리스트 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -239,30 +225,7 @@ export default function StationCafePage() {
           <div ref={mapElRef} className="h-[520px] w-full bg-white" />
 
           {/* 선택한 카페 정보 패널 (선택 시에만 노출) */}
-          {selected && (
-            <div className="px-4 py-3 border-t bg-white">
-              <div className="text-sm font-semibold">{selected.name}</div>
-              <div className="text-xs text-gray-500 mt-0.5">{selected.address}</div>
-              <div className="flex gap-2 mt-2">
-                <a
-                  target="_blank"
-                  href={selected.placeUrl}
-                  className="px-3 py-1.5 text-xs rounded-lg bg-indigo-600 text-white"
-                >
-                  카카오맵 장소상세
-                </a>
-                <a
-                  target="_blank"
-                  href={`https://map.kakao.com/link/to/${encodeURIComponent(
-                    selected.name
-                  )},${selected.pos.lat},${selected.pos.lng}`}
-                  className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 text-white"
-                >
-                  길찾기
-                </a>
-              </div>
-            </div>
-          )}
+          <SelectedCafePanel cafe={selected} />
 
           {/* 범례 */}
           <MapLegend
@@ -274,36 +237,11 @@ export default function StationCafePage() {
         </div>
 
         {/* 오른쪽 리스트: 높이 고정 + 스크롤 */}
-        <div className="rounded-2xl border bg-white p-4 max-h-[560px] overflow-auto">
-          <h3 className="font-semibold mb-3">카페 목록</h3>
-          {cafes.length === 0 && (
-            <div className="text-sm text-gray-500">주변에서 카페를 찾지 못했어요.</div>
-          )}
-          <ol className="space-y-3">
-            {cafes.map((c) => {
-              const isSel = selected?.id === c.id;
-              return (
-                <li
-                  key={c.id}
-                  onClick={() => selectCafe(c)}
-                  className={`rounded-xl border p-3 cursor-pointer hover:border-indigo-400
-                              ${isSel ? "border-indigo-500 ring-2 ring-indigo-100" : ""}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="font-medium">{c.name}</div>
-                    <div className="text-xs text-gray-500">{c.distance}m</div>
-                  </div>
-                  <div className="mt-1 text-xs text-gray-500">
-                    {c.address || "주소 정보 없음"}
-                  </div>
-                  {c.phone && (
-                    <div className="mt-1 text-xs text-gray-500">{c.phone}</div>
-                  )}
-                </li>
-              );
-            })}
-          </ol>
-        </div>
+        <CafeList
+          cafes={cafes}
+          selectedCafeId={selected?.id}
+          onSelectCafe={selectCafe}
+        />
       </div>
     </section>
   );

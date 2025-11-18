@@ -19,3 +19,14 @@ export type Station = {
   distance: number;     // 중심 지점까지 거리 (m)
   avgDistance: number;  // 멤버들의 평균 이동 거리 (m)
 };
+
+// 카페 정보
+export type Cafe = {
+  id: string;                 // kakao place id
+  name: string;
+  address?: string;
+  phone?: string;
+  pos: { lat: number; lng: number };
+  distance: number;           // m
+  placeUrl?: string;          // kakao place detail url
+};
