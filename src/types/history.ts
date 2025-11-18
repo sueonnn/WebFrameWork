@@ -36,6 +36,9 @@ export interface FilterControlsProps {
   uniqueGroups: string[];
   selectedGroup: string;
   onGroupChange: (group: string) => void;
+  sortOptions: string[]; 
+  sortOption: string; 
+  onSortChange: (sort: string) => void;
   filteredCount: number;
 }
 
