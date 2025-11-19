@@ -10,7 +10,7 @@ export default function MainPage() {
     };
 
     const handleJoinGroup = () => {
-        // navigate(''); // 추후 그룹 참여 페이지 연결 예정
+        navigate('/groups/new?tab=join'); 
     };
 
     return (

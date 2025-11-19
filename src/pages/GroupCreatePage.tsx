@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   PlusIcon, UsersIcon, ClockIcon, LocationIcon, CheckIcon
 } from '../components/icons';
@@ -9,9 +10,12 @@ import GroupCreateSuccess from '../components/group/GroupCreateSuccess';
 type Tab = 'create' | 'join';
 
 export default function GroupCreatePage() {
-  const [tab, setTab] = useState<Tab>('create');
+  const [searchParams] = useSearchParams(); 
 
-  // 성공 상태를 페이지에서 관리
+  // URL 파라미터에서 tab 값 읽어오기
+  const initialTab = (searchParams.get('tab') === 'join' ? 'join' : 'create') as Tab;
+  const [tab, setTab] = useState<Tab>(initialTab); // 초기값 설정
+
   const [success, setSuccess] = useState<{ id: string; name: string; inviteCode: string } | null>(null);
 
   return (
