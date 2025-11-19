@@ -1,0 +1,38 @@
+[
+  {
+    "id": "m1",
+    "name": "김우준",
+    "email": "woojoon@school.ac.kr",
+    "password": "Test1234!",
+    "agreeTerms": true,
+    "agreePrivacy": true,
+    "createdAt": "2024-11-19"
+  },
+  {
+    "id": "m2",
+    "name": "심우준",
+    "email": "simwoo@school.ac.kr",
+    "password": "Test1234!",
+    "agreeTerms": true,
+    "agreePrivacy": true,
+    "createdAt": "2024-11-19"
+  },
+  {
+    "id": "m3",
+    "name": "한석봉",
+    "email": "hanseok@school.ac.kr",
+    "password": "Test1234!",
+    "agreeTerms": true,
+    "agreePrivacy": true,
+    "createdAt": "2024-11-19"
+  },
+  {
+    "id": "m4",
+    "name": "홍길동",
+    "email": "hong@school.ac.kr",
+    "password": "Test1234!",
+    "agreeTerms": true,
+    "agreePrivacy": true,
+    "createdAt": "2024-11-19"
+  }
+]

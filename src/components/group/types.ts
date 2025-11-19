@@ -1,5 +1,16 @@
 import { LatLng } from '../../utils/geo';
 
+// auth용 유저
+export type User = {
+  id: string;
+  name: string;
+  email: string;
+  password: string;       
+  agreeTerms: boolean;
+  agreePrivacy: boolean;
+  createdAt?: string;
+};
+
 // 멤버 타입 (집, 학교, 회사, 기타)
 export type MemberType = 'HOME' | 'SCHOOL' | 'COMPANY' | 'ETC';
 

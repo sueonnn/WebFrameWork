@@ -1,0 +1,27 @@
+[
+  {
+    "id": "m1",
+    "name": "김우준",
+    "type": "HOME",
+    "pos": { "lat": 37.4979, "lng": 127.0276 }
+  },
+  {
+    "id": "m2",
+    "name": "심우준",
+    "type": "SCHOOL",
+    "pos": { "lat": 37.5551, "lng": 126.9368 }
+  },
+  {
+    "id": "m3",
+    "name": "한석봉",
+    "type": "COMPANY",
+    "pos": { "lat": 37.5665, "lng": 126.978 },
+    "posType": "COMPANY"
+  },
+  {
+    "id": "m4",
+    "name": "홍길동",
+    "type": "ETC",
+    "pos": { "lat": 37.510, "lng": 127.060 }
+  }
+]
