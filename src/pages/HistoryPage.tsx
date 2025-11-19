@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HistoryHeader } from '../components/specific/history/HistoryHeader';
 import { StatsSection } from '../components/specific/history/StatsSection';
 import { FilterControls } from '../components/specific/history/FilterControls';
 import { MeetingList } from '../components/specific/history/MeetingList';
 import { compareDates } from '../components/specific/history/dateUtils';
-import { DUMMY_MEETINGS } from '../constants/mockData';
+import meetingsJson from '../mock/meetings.json';
+import type { Meeting } from '../types/history';
 
 export default function HistoryPage() {
   const navigate = useNavigate();
@@ -13,6 +14,8 @@ export default function HistoryPage() {
   const [sortOption, setSortOption] = useState('최신순');
 
   const handleGoHome = () => navigate('/');
+
+  const DUMMY_MEETINGS = meetingsJson as Meeting[];
 
   const uniqueGroups = [
     '전체',
@@ -53,7 +56,7 @@ export default function HistoryPage() {
     <section className="bg-gray-50 py-12 min-h-screen">
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center px-4">
         <HistoryHeader onGoHome={handleGoHome} />
-        <StatsSection meetings={filteredMeetings} />
+        <StatsSection meetings={filteredByGroup} />
         <FilterControls
           uniqueGroups={uniqueGroups}
           selectedGroup={selectedGroup}
