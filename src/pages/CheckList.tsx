@@ -2,60 +2,38 @@ import React, { useMemo, useState } from "react";
 import UserMiniIcon from "../components/icons/UserMiniIcon";
 import TrashIcon from "../components/icons/TrashIcon";
 
-const members = ["김철수", "이영희", "박민수", "최지영", "정다은"];
+import { dummyMeetings } from "../types/dummyMeetings";
+import { dummyTasksByMeeting } from "../types/dummyTasksByMeeting";
+import { Task } from "../types/Task";
 
-type Task = {
-  id: number;
-  title: string;
-  addedBy: string;
-  date: string;
-  done: boolean;
-  assignee: string | null;
-};
+const CheckListPage: React.FC<{ meetingId?: string }> = ({ meetingId = "m1" }) => {
+  //  meeting 데이터 불러오기
+  const meeting = dummyMeetings.find((m) => m.id === meetingId);
 
-const INITIAL_TASKS: Task[] = [
-  {
-    id: 1,
-    title: "회의실 예약하기",
-    addedBy: "이영희",
-    date: "2024. 1. 15",
-    done: true,
-    assignee: "김철수",
-  },
-  {
-    id: 2,
-    title: "프레젠테이션 자료 준비",
-    addedBy: "김철수",
-    date: "2024. 1. 15",
-    done: false,
-    assignee: "박민수",
-  },
-  {
-    id: 3,
-    title: "간식 준비",
-    addedBy: "최지영",
-    date: "2024. 1. 15",
-    done: false,
-    assignee: null,
-  },
-];
+  if (!meeting) return <div>Meeting not found</div>;
 
-const CheckListPage: React.FC = () => {
-  const [tasks, setTasks] = useState<Task[]>(INITIAL_TASKS);
-  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
-  const [newTaskText, setNewTaskText] = useState("");  // ⭐ 입력 상태 추가
+  //  participants (기존 members 대신)
+  const members = meeting.participants;
+
+  //  tasks 불러오기
+  const initialTasks = dummyTasksByMeeting[meetingId] ?? [];
+
+  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const [newTaskText, setNewTaskText] = useState("");
 
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter((t) => t.done).length;
   const progress = totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
 
-  const toggleTaskDone = (id: number) => {
+  // 체크박스 토글
+  const toggleTaskDone = (id: string) => {
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
     );
   };
 
-  const changeAssignee = (id: number, name: string | null) => {
+  const changeAssignee = (id: string, name: string | null) => {
     setTasks((prev) =>
       prev.map((t) => (t.id === id ? { ...t, assignee: name } : t))
     );
@@ -65,7 +43,6 @@ const CheckListPage: React.FC = () => {
   const addTask = () => {
     if (!newTaskText.trim()) return;
 
-    // @담당자 파싱
     let assignee: string | null = null;
     const atIndex = newTaskText.indexOf("@");
     let title = newTaskText;
@@ -79,20 +56,22 @@ const CheckListPage: React.FC = () => {
     }
 
     const newTask: Task = {
-      id: Date.now(),
+      id: Date.now().toString(), // string id
       title,
-      addedBy: "나", // 임시
-      date: "2024. 1. 15",
+      addedBy: "나",
+      date: meeting.date,
       done: false,
       assignee,
     };
 
     setTasks((prev) => [...prev, newTask]);
-    setNewTaskText(""); // 입력창 초기화
+    setNewTaskText("");
   };
-  const deleteTask = (id: number) => {
+
+  const deleteTask = (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
   };
+
   // 담당자별 통계
   const memberStats = useMemo(() => {
     const stats: Record<string, { done: number; total: number }> = {};
@@ -107,7 +86,8 @@ const CheckListPage: React.FC = () => {
     });
 
     return stats;
-  }, [tasks]);
+  }, [tasks, members]);
+
 
   return (
     <div className="min-h-screen bg-[#F7F7FB] flex justify-center py-12">
@@ -146,8 +126,8 @@ const CheckListPage: React.FC = () => {
               </div>
 
               <div className="flex flex-wrap gap-6 mt-6 text-sm">
-                <div className="flex items-center gap-2">📅 목요일 19:00 - 20:00</div>
-                <div className="flex items-center gap-2">📍 강남역 2번 출구 스타벅스</div>
+                <div className="flex items-center gap-2">📅 {meeting.time}</div>
+                <div className="flex items-center gap-2">📍 {meeting.location}</div>
                 <div className="flex items-center gap-2">👥 {members.length}명 참석</div>
               </div>
             </section>
@@ -172,7 +152,9 @@ const CheckListPage: React.FC = () => {
                 </button>
               </div>
 
-              <p className="text-[11px] text-gray-400 mt-3">※ 기록을 입력하면 멤버별 선택할 수 있어요.</p>
+              <p className="text-[11px] text-gray-400 mt-3">
+                ※ 기록을 입력하면 멤버별 선택할 수 있어요.
+              </p>
             </section>
 
             {/* 체크리스트 */}
