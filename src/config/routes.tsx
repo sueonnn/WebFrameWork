@@ -9,6 +9,8 @@ import SchedulePage from '../pages/SchedulePage';
 import GroupTimelinePage from '../pages/GroupTimelinePage';
 import GroupPlaceRecommendPage from "../pages/GroupPlaceRecommendPage";
 import StationCafePage from "../pages/StationCafePage";
+import CheckListPage from "../pages/CheckList";  
+import HistoryDetailPage from "../pages/HistoryDetailPage";  
 
 export const router = createBrowserRouter([
   {
@@ -20,6 +22,8 @@ export const router = createBrowserRouter([
       { path: '/groups/schedule', element: <SchedulePage /> },
       { path: "/groups/timeline", element: <GroupTimelinePage /> },
       // { path: '/groups/:groupId', element: <GroupDetailPage /> }, // 추후 연결
+      { path: "/groups/checklist", element: <CheckListPage /> }, 
+      { path: "/groups/checkstory", element: <HistoryDetailPage /> },
       { path: "/groups/:groupId/decide", element: <DecisionPage /> },
       { path: '/history', element: <HistoryPage /> },
       { path: "/groups/recommend", element: <GroupPlaceRecommendPage /> },
