@@ -1,5 +1,5 @@
 // pages/SchedulePage.tsx
-import React, { useState } from "react";
+import { useState } from "react";
 
 import TimeGrid from "../components/specific/schedule/TimeGrid";
 import ScheduleSidebar from "../components/specific/schedule/ScheduleSidebar";
@@ -33,6 +33,9 @@ export default function SchedulePage() {
   } = useUserSettingStore();
 
   const totalHours = schedules?.[activeTab]?.size ?? 0;
+
+  // Mock 데이터 임시 고정
+  const currentGroupId = "g1";
 
   // ===========================================================
   // 🧨 전체 삭제 (Delete All)
@@ -117,7 +120,7 @@ export default function SchedulePage() {
         {/* ================================================================= */}
         {/* ========================= 오른쪽: 패널 ========================== */}
         {/* ================================================================= */}
-        <ScheduleSidebar totalHours={totalHours} />
+        <ScheduleSidebar totalHours={totalHours} groupId={currentGroupId} />
       </div>
     </section>
   );

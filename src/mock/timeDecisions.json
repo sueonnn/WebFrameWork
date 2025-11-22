@@ -1,0 +1,56 @@
+[
+  {
+    "groupId": "g1",
+    "meetingId": "m1",
+    "candidates": [
+      {
+        "id": "m1-ts1",
+        "timeLabel": "목요일 19:00-20:00",
+        "availableMemberIds": ["m1", "m2", "m3", "m4"],
+            "voteAgreeIds": ["m1", "m2", "m3", "m4"],
+            "votePendingIds": []
+      },
+      {
+        "id": "m1-ts2",
+        "timeLabel": "금요일 18:30-19:30",
+        "availableMemberIds": ["m1", "m2", "m3"],
+        "voteAgreeIds": ["m1", "m2"],
+        "votePendingIds": ["m3"]
+      },
+      {
+        "id": "m1-ts3",
+        "timeLabel": "토요일 14:00-15:00",
+        "availableMemberIds": ["m2", "m3", "m4"],
+        "voteAgreeIds": ["m2", "m3"],
+        "votePendingIds": ["m4"]
+      },
+      {
+        "id": "m1-ts4",
+        "timeLabel": "일요일 16:00-17:00",
+        "availableMemberIds": ["m1", "m4"],
+        "voteAgreeIds": ["m1"],
+        "votePendingIds": ["m4"]
+      }
+    ]
+  },
+  {
+    "groupId": "g2",
+    "meetingId": "m2",
+    "candidates": [
+      {
+        "id": "m2-ts1",
+        "timeLabel": "토요일 17:00-18:00",
+        "availableMemberIds": ["m1", "m2"],
+        "voteAgreeIds": ["m1"],
+        "votePendingIds": ["m2"]
+      },
+      {
+        "id": "m2-ts2",
+        "timeLabel": "토요일 18:00-19:00",
+        "availableMemberIds": ["m1", "m2"],
+        "voteAgreeIds": ["m1", "m2"],
+        "votePendingIds": []
+      }
+    ]
+  }
+]

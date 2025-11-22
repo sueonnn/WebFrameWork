@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Task } from "../types/Task";
-import { dummyMeetings } from "../types/dummyMeetings";
-import { dummyTasksByMeeting } from "../types/dummyTasksByMeeting";
+import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
+import type { MeetingInfo } from "../types/MeetingInfo";
 
 // 분리한 컴포넌트들
 import ChecklistHeader from "../components/specific/checklist/ChecklistHeader";
@@ -12,12 +13,18 @@ import ChecklistParticipants from "../components/specific/checklist/ChecklistPar
 import ChecklistStatsByMember from "../components/specific/checklist/ChecklistStatsByMember";
 import ChecklistFinalCTA from "../components/specific/checklist/ChecklistFinalCTA";
 
-const CheckListPage: React.FC<{ meetingId?: string }> = ({ meetingId = "m1" }) => {
-  const meeting = dummyMeetings.find((m) => m.id === meetingId);
+const CheckListPage: React.FC = () => {
+  const { meetingId } = useParams<{ meetingId?: string }>();
+
+  const targetId = meetingId ?? "m1"; // 없으면 기본값 m1
+
+  const meeting: MeetingInfo | undefined = MEETING_INFOS.find(
+    (m) => m.id === targetId
+  );
   if (!meeting) return <div>Meeting not found</div>;
 
   const members = meeting.participants;
-  const initialTasks = dummyTasksByMeeting[meetingId] ?? [];
+  const initialTasks = TASKS_BY_MEETING[targetId] ?? [];
 
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
@@ -40,7 +47,7 @@ const CheckListPage: React.FC<{ meetingId?: string }> = ({ meetingId = "m1" }) =
     );
   };
 
-  // ⭐ 신규 할 일 추가
+  // 신규 할 일 추가
   const addTask = () => {
     if (!newTaskText.trim()) return;
 

@@ -1,16 +1,18 @@
-import React from "react";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
   totalHours: number;
+  groupId: string;   
 };
 
-export default function ScheduleSidebar({ totalHours }: Props) {
+
+export default function ScheduleSidebar({ totalHours, groupId }: Props) {
   return (
     <aside className="w-[320px] flex flex-col gap-6">
       <LocationCard />
       <MySummaryCard totalHours={totalHours} />
       <OverlapTopCard />
-      <NextStepCard />
+      <NextStepCard groupId={groupId} /> 
     </aside>
   );
 }
@@ -93,7 +95,23 @@ function OverlapTopCard() {
   );
 }
 
-function NextStepCard() {
+function NextStepCard({ groupId }: { groupId: string }) {
+  const navigate = useNavigate();
+
+   const goRoulette = () => {
+    // 기본: 타임룰렛 탭
+    navigate(`/groups/${groupId}/decide`);
+    // 혹시 쿼리로 모드까지 보내고 싶으면:
+    // navigate(`/groups/${groupId}/decide?mode=roulette`);
+  };
+
+  const goVote = () => {
+    // 같은 페이지로 가되, 나중에 vote 모드를 쓰고 싶으면 쿼리 사용 가능
+    navigate(`/groups/${groupId}/decide`);
+    // 또는:
+    // navigate(`/groups/${groupId}/decide?mode=vote`);
+  };
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
       <h3 className="text-base font-semibold text-gray-900">다음 단계</h3>
@@ -102,6 +120,7 @@ function NextStepCard() {
       </p>
 
       <button
+        onClick={goRoulette}  
         className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
       >
         <span className="inline-flex items-center gap-2 justify-center">
@@ -120,7 +139,9 @@ function NextStepCard() {
         </span>
       </button>
 
-      <button className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition">
+      <button
+       onClick={goVote}
+       className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition">
         투표로 결정
       </button>
     </div>

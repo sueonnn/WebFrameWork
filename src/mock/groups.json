@@ -1,9 +1,10 @@
 [
   {
     "id": "g1",
-    "name": "Check&Go 프로젝트 팀",
+    "name": "언제봐 프로젝트 팀",
     "description": "캡스톤 팀 모임",
-    "memberIds": ["m1", "m2", "m3"],
+    "memberIds": ["m1", "m2", "m3", "m4"],
+    "inviteCode": "AB12CD34",    
     "createdAt": "2024-01-01"
   },
   {
@@ -11,6 +12,7 @@
     "name": "독서 모임",
     "description": "토요일 오후 독서 스터디",
     "memberIds": ["m2", "m4"],
+    "inviteCode": "EF56GH78",      
     "createdAt": "2024-01-05"
   }
 ]

@@ -5,15 +5,10 @@ import { GroupPlaceHeader } from '../components/group/GroupPlaceHeader';
 import { GroupPlaceRadiusSelector } from '../components/group/GroupPlaceRadiusSelector';
 import { GroupPlaceMap } from '../components/group/GroupPlaceMap';
 import { GroupPlaceStationList } from '../components/group/GroupPlaceStationList';
+import { MEMBERS } from '../mock';
 
 const RADIUS_OPTIONS = [300, 500, 800, 1000, 1500, 2000];
 
-// TODO: 추후 전역 store에서 주입받을 멤버 목록 (현재는 mock)
-const mockMembers: Member[] = [
-  { id: 'u1', name: 'A', type: 'HOME',    pos: { lat: 37.5826, lng: 127.0103 } },
-  { id: 'u2', name: 'B', type: 'COMPANY', pos: { lat: 37.5771, lng: 127.0018 } },
-  { id: 'u3', name: 'C', type: 'SCHOOL',  pos: { lat: 37.5882, lng: 127.0064 } },
-];
 
 export default function GroupPlaceRecommendPage() {
   const nav = useNavigate();
@@ -24,7 +19,7 @@ export default function GroupPlaceRecommendPage() {
   const [stations, setStations] = useState<Station[]>([]);
 
   // 나중에 store 연동 시를 대비해 useMemo 사용 (여기서는 mock 고정)
-  const members = useMemo(() => mockMembers, []);
+  const members: Member[] = useMemo(() => MEMBERS, []);
 
   // 상위 3개 추천 역
   const top3 = useMemo(() => stations.slice(0, 3), [stations]);

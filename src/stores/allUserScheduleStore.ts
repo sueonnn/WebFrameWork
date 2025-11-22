@@ -1,6 +1,5 @@
-// src/stores/allUserScheduleStore.ts
 import { create } from "zustand";
-import type { MySchedule } from "./schedule";  // ← 이걸로 수정!
+import type { MySchedule } from "./schedule"; 
 
 interface AllUserScheduleState {
   schedules: Record<string, MySchedule>;

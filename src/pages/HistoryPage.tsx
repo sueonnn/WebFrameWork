@@ -5,7 +5,7 @@ import { StatsSection } from '../components/specific/history/StatsSection';
 import { FilterControls } from '../components/specific/history/FilterControls';
 import { MeetingList } from '../components/specific/history/MeetingList';
 import { compareDates } from '../components/specific/history/dateUtils';
-import meetingsJson from '../mock/meetings.json';
+import { MEETINGS } from '../mock'; 
 import type { Meeting } from '../types/history';
 
 export default function HistoryPage() {
@@ -15,17 +15,17 @@ export default function HistoryPage() {
 
   const handleGoHome = () => navigate('/');
 
-  const DUMMY_MEETINGS = meetingsJson as Meeting[];
+  const allMeetings: Meeting[] = MEETINGS;
 
   const uniqueGroups = [
     '전체',
-    ...new Set(DUMMY_MEETINGS.map((meeting) => meeting.title)),
+    ...new Set(allMeetings.map((meeting) => meeting.title)),
   ];
 
   const sortOptions = ['최신순', '오래된순', '완료', '미완료'];
 
   // 그룹 필터링
-  const filteredByGroup = DUMMY_MEETINGS.filter((meeting) =>
+  const filteredByGroup = allMeetings.filter((meeting) =>
     selectedGroup === '전체' ? true : meeting.title === selectedGroup
   );
 

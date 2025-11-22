@@ -1,25 +1,54 @@
 import { useState } from 'react';
+import { useNavigate } from "react-router-dom";
 import { UsersIcon } from '../icons';
+import { GROUPS } from "../../mock"; 
 
 export default function GroupJoinForm() {
-  const [code, setCode] = useState('');
-  const [modalMessage, setModalMessage] = useState('');
+  const [code, setCode] = useState("");
+  const [modalMessage, setModalMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const [canGoSchedule, setCanGoSchedule] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleJoinClick = () => {
-    if(code.trim() === '') {
-      setModalMessage('초대 코드를 입력한 후에 눌러주세요.');
+    const trimmed = code.trim().toUpperCase();
+
+    if (trimmed === "") {
+      setModalMessage("초대 코드를 입력한 후에 눌러주세요.");
       setShowModal(true);
       return;
     }
-    if(code.trim().length < 8) {
-      setModalMessage('초대 코드는 8자리여야 합니다.');
+    if (trimmed.length < 8) {
+      setModalMessage("초대 코드는 8자리여야 합니다.");
       setShowModal(true);
       return;
     }
 
-    // 실제 참여 로직은 여기서 처리할 예정
-    console.log('참여 코드:', code);
+    const group = GROUPS.find((g) => g.inviteCode === trimmed);
+
+    if (!group) {
+      setModalMessage("해당 초대코드를 가진 그룹을 찾을 수 없어요.");
+      setShowModal(true);
+      return;
+    }
+
+    // 참여 성공 연출
+    console.log("참여 코드:", trimmed, "=> 그룹:", group);
+
+    setModalMessage(`"${group.name}" 그룹에 참여했어요!`);
+    setCanGoSchedule(true);  
+    setShowModal(true);
+
+
+  };
+
+   const handleModalClose = () => {
+    setShowModal(false);
+    if (canGoSchedule) {
+      navigate("/groups/schedule"); 
+      setCanGoSchedule(false);      
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +102,7 @@ export default function GroupJoinForm() {
           <div className="bg-white rounded-2xl shadow-lg px-6 py-5 w-72 text-center">
             <p className="text-sm text-gray-800">{modalMessage}</p>
             <button
-              onClick={() => setShowModal(false)}
+              onClick={handleModalClose}
               className="mt-4 w-full rounded-lg bg-indigo-600 text-white text-sm py-2 hover:bg-indigo-700"
             >
               확인

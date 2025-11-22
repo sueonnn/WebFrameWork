@@ -1,6 +1,7 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { Eye } from "lucide-react";
-import { loginEmail, resetPassword } from "../../apis/auth";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const LoginPanel: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -9,6 +10,9 @@ const LoginPanel: React.FC = () => {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null); // 성공 메시지
+
+  const { loginWithEmail } = useAuth();     
+  const navigate = useNavigate();     
 
     //  최초 진입 시 이메일 자동입력 + 메시지
   useEffect(() => {
@@ -28,9 +32,9 @@ const LoginPanel: React.FC = () => {
     setErr(null);
     setBusy(true);
     try {
-      await loginEmail(email, pw);
+      await loginWithEmail(email, pw);
       // 로그인 성공하면홈으로
-      window.location.replace("/");
+      navigate("/");
     } catch (e: any) {
       setErr(e?.message ?? "로그인에 실패했습니다.");
     } finally {
@@ -38,15 +42,13 @@ const LoginPanel: React.FC = () => {
     }
   }
 
-   async function onReset() {
-    if (!email) return setErr("재설정 메일을 보내려면 이메일을 먼저 입력하세요.");
-    setErr(null);
-    try {
-      await resetPassword(email);
-      alert("비밀번호 재설정 메일을 보냈습니다.");
-    } catch (e: any) {
-      setErr(e?.message ?? "재설정 메일 전송에 실패했습니다.");
+  function onReset() {
+    if (!email) {
+      setErr("재설정 안내를 받으려면 이메일을 먼저 입력하세요.");
+      return;
     }
+    setErr(null);
+    setInfo("데모 버전에서는 비밀번호 재설정 메일을 보내지 않습니다.");
   }
 
 {/* <div className="flex flex-col space-y-6 p-8 "></div> */}

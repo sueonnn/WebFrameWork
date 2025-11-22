@@ -1,4 +1,3 @@
-// stores/groupStore.ts
 import { create } from 'zustand';
 import type { CreateGroupDTO, CreateGroupResponse } from '../types/group';
 import { apiCreateGroup } from '../apis/groups';

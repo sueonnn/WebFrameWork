@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom'; 
 import { MeetingListProps, MeetingCardProps } from '../../../types/history';
 import { CalendarIcon } from '../../icons/CalendarIcon';
 import { TimeClockIcon } from '../../icons/TimeClockIcon';
@@ -8,8 +9,17 @@ import { ChevronDownIcon } from '../../icons/ChevronDownIcon';
 
 // MeetingCard 컴포넌트 (MeetingList 내부에서만 사용)
 const MeetingCard: React.FC<MeetingCardProps> = ({ meeting }) => {
+  const navigate = useNavigate(); 
+
+  const handleClick = () => {
+    // 여기서 네가 원한 코드가 실행됨
+    navigate(`/groups/checklist/${meeting.id}`);
+    // 만약 히스토리 상세로 가고 싶으면:
+    // navigate(`/groups/checkstory/${meeting.id}`);
+  };
   return (
-    <li className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md">
+    <li className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm transition hover:shadow-md"
+    onClick={handleClick}>
       {/* 카드 상단: 아이콘, 제목, 날짜, 상태, 드롭다운 버튼 */}
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="flex items-center gap-4">
@@ -27,7 +37,8 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting }) => {
           >
             {meeting.status}
           </span>
-          <button className="text-gray-400 hover:text-gray-600">
+          <button className="text-gray-400 hover:text-gray-600"
+          onClick={(e) => e.stopPropagation()}>
             <ChevronDownIcon />
           </button>
         </div>
