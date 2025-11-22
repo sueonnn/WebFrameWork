@@ -3,33 +3,29 @@ import type { WeekType } from "../types/schedule";
 
 interface GroupScheduleState {
   groupName: string;
+  memberIds: string[];   // 그룹 멤버
   memberCount: number;
-  groupSchedules: Record<WeekType, Record<string, number>>; // "0-13": count
-  setGroupName: (name: string) => void;
-  updateSchedule: (week: WeekType, cellKey: string, count: number) => void;
-  clearGroup: (week: WeekType) => void;
+
+  groupSchedules: {
+    this: Record<string, number>;
+    next: Record<string, number>;
+  };
+
+  setGroupSchedules: (s: {
+    this: Record<string, number>;
+    next: Record<string, number>;
+  }) => void;
 }
 
 export const useGroupScheduleStore = create<GroupScheduleState>((set) => ({
-  groupName: "D.L.O.O.L",
-  memberCount: 6,
+  groupName: "우리 팀",
+  memberIds: ["user1", "user2", "user3"],
+  memberCount: 3,
+
   groupSchedules: {
     this: {},
     next: {},
   },
 
-  setGroupName: (name) => set({ groupName: name }),
-
-  updateSchedule: (week, cellKey, count) =>
-    set((state) => ({
-      groupSchedules: {
-        ...state.groupSchedules,
-        [week]: { ...state.groupSchedules[week], [cellKey]: count },
-      },
-    })),
-
-  clearGroup: (week) =>
-    set((state) => ({
-      groupSchedules: { ...state.groupSchedules, [week]: {} },
-    })),
+  setGroupSchedules: (groupSchedules) => set({ groupSchedules }),
 }));

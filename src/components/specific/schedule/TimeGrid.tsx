@@ -9,7 +9,8 @@ interface TimeGridProps {
 }
 
 export default function TimeGrid({ weekType }: TimeGridProps) {
-  const { schedules, toggleCell, setSchedules } = useMyScheduleStore();
+  // 🔹 toggleCell 제거 (이제 드래그 중에는 항상 tempSelected만 사용)
+  const { schedules, setSchedules } = useMyScheduleStore();
   const { autoSave, showWorkingHoursOnly } = useUserSettingStore();
 
   const [tempSelected, setTempSelected] = useState<Set<string>>(new Set());
@@ -46,12 +47,12 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
     const base = new Set(schedules?.[weekType] ?? []);
     // 숨김된 셀 제외 (UI 전체삭제 시)
     hiddenSet.forEach((k) => base.delete(k));
-    if (autoSave) return base;
 
+    // 🔹 autoSave여도 드래그 중인 tempSelected는 바로 UI에 표시
     const union = new Set(base);
     tempSelected.forEach((k) => union.add(k));
     return union;
-  }, [schedules, weekType, tempSelected, autoSave, hiddenSet]);
+  }, [schedules, weekType, tempSelected, hiddenSet]);
 
   // ===== 외부 이벤트 리스너 =====
   useEffect(() => {
@@ -121,7 +122,7 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
     }
   }, [weekType, prevWeekType]);
 
-  // ===== 셀 토글 =====
+  // ===== 셀 토글 (항상 temp에만 기록) =====
   const toggleTemp = (day: number, hour: number) => {
     const key = `${day}-${hour}`;
     setTempSelected((prev) => {
@@ -133,18 +134,31 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
 
   const handleMouseDown = (day: number, hour: number) => {
     isDraggingRef.current = true;
-    if (autoSave) toggleCell(weekType, day, hour);
-    else toggleTemp(day, hour);
+    // 🔹 autoSave 여부와 관계없이 드래그 중엔 tempSelected만 변경
+    toggleTemp(day, hour);
   };
 
   const handleMouseEnter = (day: number, hour: number) => {
     if (!isDraggingRef.current) return;
-    if (autoSave) toggleCell(weekType, day, hour);
-    else toggleTemp(day, hour);
+    // 🔹 드래그 중인 셀 계속 tempSelected에 반영
+    toggleTemp(day, hour);
   };
 
   const handleMouseUp = () => {
     isDraggingRef.current = false;
+
+    // 🔹 자동저장 ON일 때만 드래그가 끝난 시점에 store로 commit
+    if (autoSave && tempSelected.size > 0) {
+      setSchedules((prev) => {
+        const copy = {
+          this: new Set(prev.this),
+          next: new Set(prev.next),
+        };
+        tempSelected.forEach((k) => copy[weekType].add(k));
+        return copy;
+      });
+      setTempSelected(new Set());
+    }
   };
 
   // ===== 렌더 =====
