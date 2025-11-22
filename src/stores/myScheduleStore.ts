@@ -1,4 +1,3 @@
-// src/stores/myScheduleStore.ts
 import { create } from "zustand";
 import type { MySchedule } from "./schedule";
 

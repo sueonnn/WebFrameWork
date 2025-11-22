@@ -21,9 +21,8 @@ export const router = createBrowserRouter([
       { path: '/groups/new', element: <GroupCreatePage /> },
       { path: '/groups/schedule', element: <SchedulePage /> },
       { path: "/groups/timeline", element: <GroupTimelinePage /> },
-      // { path: '/groups/:groupId', element: <GroupDetailPage /> }, // 추후 연결
-      { path: "/groups/checklist", element: <CheckListPage /> }, 
-      { path: "/groups/checkstory", element: <HistoryDetailPage /> },
+      { path: "/groups/checklist/:meetingId", element: <CheckListPage /> },
+      { path: "/groups/checkstory/:meetingId", element: <HistoryDetailPage /> },
       { path: "/groups/:groupId/decide", element: <DecisionPage /> },
       { path: '/history', element: <HistoryPage /> },
       { path: "/groups/recommend", element: <GroupPlaceRecommendPage /> },

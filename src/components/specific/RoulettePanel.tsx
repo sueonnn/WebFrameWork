@@ -1,42 +1,56 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import TimeRoulette from "./TimeRoulette";
-import FinalDecisionModal from "./FinalDecisionModal"; // 모달 컴포넌트 import
+import FinalDecisionModal from "./FinalDecisionModal";
+import { GROUP_TIME_DECISIONS, MEMBERS, MEETING_INFOS } from "../../mock";
+import type { GroupTimeDecision, TimeDecisionCandidate } from "../../mock";
 
-// 임시 데이터를 위한 참가자 이름 목록
-const mockParticipants = [
-  "김철수",
-  "이영희",
-  "박민수",
-  "최지영",
-  "정다은",
-  "한상우",
-];
+type RoulettePanelProps = {
+  groupId: string;
+  onSwitchToVote: () => void;
+};
 
-// 임시 시간 후보 컴포넌트
-const TimeSlotCard: React.FC<{
-  time: string;
-  available: string;
-  percentage: number;
-  color: string;
-}> = ({ time, available, percentage, color }) => (
-  <div className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition">
-    <div className="flex justify-between items-center mb-2">
-      <h3 className="text-lg font-bold text-gray-800">{time}</h3>
-      <span className={`text-sm font-semibold ${color}`}>{available} 가능</span>
-    </div>
-    <p className="text-xs text-gray-500 mb-3">{mockParticipants.join(", ")}</p>
+const COLORS = ["#EF4444", "#F59E0B", "#10B981", "#3B82F6", "#8B5CF6"];
 
-    <div className="flex justify-between items-center mt-2">
-      <span className="text-sm text-gray-600">{percentage}%</span>
-      <span className="text-sm text-indigo-600 font-medium">단장님 우선</span>
-    </div>
-  </div>
-);
-
-const RoulettePanel: React.FC = () => {
+const RoulettePanel: React.FC<RoulettePanelProps> = ({
+  groupId,
+  onSwitchToVote,
+})  => {
   // 모달 상태 관리
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [winnerTime, setWinnerTime] = useState("");
+
+  const decision: GroupTimeDecision | undefined = useMemo(
+    () => GROUP_TIME_DECISIONS.find((d) => d.groupId === groupId),
+    [groupId]
+  );
+
+  // 모임 정보 (참가자 이름용)
+  const meeting = useMemo(
+    () =>
+      decision
+        ? MEETING_INFOS.find((m) => m.id === decision.meetingId)
+        : undefined,
+    [decision]
+  );
+
+  const participants = meeting?.participants ?? [];
+
+  // 멤버 ID -> 이름 매핑
+  const memberMap = useMemo(() => {
+    const map: Record<string, string> = {};
+    MEMBERS.forEach((m) => {
+      map[m.id] = m.name;
+    });
+    return map;
+  }, []);
+
+  //  룰렛 세그먼트 생성 (가능 인원 수로 가중치)
+  const rouletteSegments =
+    decision?.candidates.map((c, idx) => ({
+      label: c.timeLabel,
+      color: COLORS[idx % COLORS.length],
+      weight: c.availableMemberIds.length || 1,
+    })) ?? [];
 
   // 룰렛 회전 완료 시 호출될 콜백 함수
   const handleRouletteFinish = (result: string) => {
@@ -57,13 +71,15 @@ const RoulettePanel: React.FC = () => {
     // 현재는 모달만 닫고 다시 돌릴 수 있는 환경을 제공합니다.
   };
 
-  // 룰렛 데이터 (TimeRoulette.tsx의 MOCK_SEGMENTS와 일치)
-  const rouletteSegments = [
-    { label: "목요일 19:00", color: "#EF4444", weight: 25 },
-    { label: "금요일 18:30", color: "#F59E0B", weight: 25 },
-    { label: "토요일 14:00", color: "#10B981", weight: 25 },
-    { label: "일요일 16:00", color: "#3B82F6", weight: 25 },
-  ];
+  if (!decision || rouletteSegments.length === 0) {
+    return (
+      <div className="p-6 rounded-xl bg-white border border-gray-200">
+        이 그룹에 대한 시간 후보 데이터가 없습니다. (groupId: {groupId})
+      </div>
+    );
+  }
+
+  const totalParticipants = participants.length || 1;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
@@ -100,8 +116,9 @@ const RoulettePanel: React.FC = () => {
           {" "}
           {/* mt-auto로 아래로 밀어냄 */}
           <div className="flex items-center justify-between bg-yellow-50 p-4 rounded-lg border-l-4 border-yellow-500 mb-2">
-            <span className="text-3xl font-bold text-yellow-700">6</span>
-            <button className="px-4 py-2 text-sm font-semibold text-indigo-600 border border-indigo-300 rounded-md hover:bg-indigo-50 transition duration-150">
+            <span className="text-3xl font-bold text-yellow-700">{participants.length}</span>
+            <button className="px-4 py-2 text-sm font-semibold text-indigo-600 border border-indigo-300 rounded-md hover:bg-indigo-50 transition duration-150"
+            onClick={onSwitchToVote}>
               투표로 전환
             </button>
           </div>
@@ -115,30 +132,49 @@ const RoulettePanel: React.FC = () => {
       <div className="lg:col-span-2">
         <h2 className="text-2xl font-bold mb-6 text-gray-700">후보 시간들</h2>
         <div className="space-y-4">
-          <TimeSlotCard
-            time="목요일 19:00-20:00"
-            available="6/6"
-            percentage={100}
-            color="text-green-600"
-          />
-          <TimeSlotCard
-            time="금요일 18:30-19:30"
-            available="5/6"
-            percentage={83}
-            color="text-blue-600"
-          />
-          <TimeSlotCard
-            time="토요일 14:00-15:00"
-            available="4/6"
-            percentage={67}
-            color="text-yellow-600"
-          />
-          <TimeSlotCard
-            time="일요일 16:00-17:00"
-            available="5/6"
-            percentage={83}
-            color="text-blue-600"
-          />
+          {decision.candidates.map((c: TimeDecisionCandidate) => {
+            const availCount = c.availableMemberIds.length;
+            const percentage = Math.round(
+              (availCount / totalParticipants) * 100
+            );
+            const availableNames = c.availableMemberIds
+              .map((id) => memberMap[id] ?? id)
+              .join(", ");
+
+            // 색상 클래스는 간단히 퍼센트 기준으로
+            const colorClass =
+              percentage === 100
+                ? "text-green-600"
+                : percentage >= 75
+                ? "text-blue-600"
+                : "text-yellow-600";
+
+            return (
+              <div
+                key={c.id}
+                className="bg-white p-4 rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition"
+              >
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-bold text-gray-800">
+                    {c.timeLabel}
+                  </h3>
+                  <span className={`text-sm font-semibold ${colorClass}`}>
+                    {availCount}/{totalParticipants} 가능
+                  </span>
+                </div>
+                <p className="text-xs text-gray-500 mb-3">{availableNames}</p>
+
+                <div className="flex justify-between items-center mt-2">
+                  <span className="text-sm text-gray-600">
+                    {percentage}% 가능
+                  </span>
+                  <span className="text-sm text-indigo-600 font-medium">
+                    단장님 우선
+                  </span>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

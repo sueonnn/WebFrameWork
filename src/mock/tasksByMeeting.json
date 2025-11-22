@@ -1,0 +1,38 @@
+{
+  "m1": [
+    {
+      "id": "t1",
+      "title": "회의실 예약하기",
+      "addedBy": "김도기",
+      "date": "2024. 1. 15",
+      "done": true,
+      "assignee": "심우준"
+    },
+    {
+      "id": "t2",
+      "title": "프레젠테이션 자료 준비",
+      "addedBy": "심우준",
+      "date": "2024. 1. 15",
+      "done": false,
+      "assignee": "한석봉"
+    },
+    {
+      "id": "t3",
+      "title": "간식 준비",
+      "addedBy": "한석봉",
+      "date": "2024. 1. 15",
+      "done": false,
+      "assignee": null
+    }
+  ],
+  "m2": [
+    {
+      "id": "t4",
+      "title": "스터디 발표자료 정리",
+      "addedBy": "김도기",
+      "date": "2024. 2. 3",
+      "done": false,
+      "assignee": "김도기"
+    }
+  ]
+}

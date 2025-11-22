@@ -1,9 +1,9 @@
 import React, { useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { MeetingInfo } from "../types/MeetingInfo";
 import { Task } from "../types/Task";
 
-import { dummyMeetings } from "../types/dummyMeetings";
-import { dummyTasksByMeeting } from "../types/dummyTasksByMeeting";
+import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
 
 // 분리한 컴포넌트들
 import HistoryHeader from "../components/specific/group/history/HistoryHeader";
@@ -14,9 +14,13 @@ import HistoryParticipants from "../components/specific/group/history/HistoryPar
 import HistoryTaskByPerson from "../components/specific/group/history/HistoryTaskByPerson";
 import HistoryStats from "../components/specific/group/history/HistoryStats";
 
-const HistoryDetailPage: React.FC<{ meetingId?: string }> = ({ meetingId = "m1" }) => {
+const HistoryDetailPage: React.FC= () => {
+  const { meetingId } = useParams<{ meetingId?: string }>();
+  const navigate = useNavigate();
 
-  const meeting = dummyMeetings.find((m) => m.id === meetingId);
+  const targetId = meetingId ?? "m1";
+
+  const meeting = MEETING_INFOS.find((m) => m.id === targetId);
 
   const safeMeeting: MeetingInfo =
     meeting ?? {
@@ -30,7 +34,7 @@ const HistoryDetailPage: React.FC<{ meetingId?: string }> = ({ meetingId = "m1" 
 
   const participants = safeMeeting.participants;
 
-  const initialTasks: Task[] = dummyTasksByMeeting[meetingId] ?? [];
+  const initialTasks: Task[] = TASKS_BY_MEETING[targetId] ?? [];
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
 
   const doneCount = tasks.filter((t) => t.done).length;

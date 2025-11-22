@@ -3,11 +3,12 @@
   name: string;
   description?: string;
   memberIds: string[];  // 그룹의 전체 멤버 ID 배열
+  inviteCode: string;
   createdAt?: string;
 }
 
 export interface Meeting {
-  id: number;
+  id: string;
   // meetings.json에 있으니까 optional로 추가
   groupId?: string;      // "g1", "g2" 등
   title: string;

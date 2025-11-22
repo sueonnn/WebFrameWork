@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import type { WeekType } from "../types/schedule";
 
 interface GroupScheduleState {
   groupName: string;

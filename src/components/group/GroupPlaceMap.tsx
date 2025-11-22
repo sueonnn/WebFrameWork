@@ -9,10 +9,6 @@
 //    - "중심까지 거리 + 평균 이동 거리" 기준으로 정렬
 //    - 상위 역들에 초록 핀 표시
 //    - 결과를 onStationsChange로 부모에 전달
-//
-// 주의:
-// - overlayRefs / stationMarkerRefs 로 기존 마커·원을 모두 관리해서
-//   반경이 바뀔 때 setMap(null)로 정리(메모리/중복 방지)
 
 import { useEffect, useRef } from 'react';
 import useKakaoLoader from '../../hooks/useKakaoLoader';
