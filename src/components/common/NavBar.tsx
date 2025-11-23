@@ -5,8 +5,8 @@ import { useAuth } from "../../contexts/AuthContext";
 
 const NavBar: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, user, logout } = useAuth();
-  
+  const { isLoggedIn, user } = useAuth();
+
   const menuItems = [
     { name: "홈", path: "/" },
     { name: "히스토리", path: "/history" },
@@ -18,10 +18,7 @@ const NavBar: React.FC = () => {
   return (
     <nav className="flex items-center justify-between p-4 border-b border-gray-200 bg-white">
       <div className="flex items-baseline space-x-8">
-        <NavLink
-          to="/"
-          className="text-lg font-bold text-indigo-600" 
-        >
+        <NavLink to="/" className="text-lg font-bold text-indigo-600">
           {logoName}
         </NavLink>
 
@@ -32,8 +29,8 @@ const NavBar: React.FC = () => {
             className={({ isActive }) =>
               `text-lg font-semibold ${
                 isActive
-                  ? "text-indigo-600" // 활성화 시
-                  : "text-gray-700 hover:text-indigo-600" // 비활성화 시
+                  ? "text-indigo-600"
+                  : "text-gray-700 hover:text-indigo-600"
               }`
             }
           >
@@ -52,9 +49,10 @@ const NavBar: React.FC = () => {
               모임 만들기
             </button>
             <Bell className="w-6 h-6 text-gray-500 cursor-pointer hover:text-indigo-600" />
+            {/* ✅ 아이콘 클릭 시 마이페이지로 이동 */}
             <div
               className="flex items-center gap-2 cursor-pointer"
-              onClick={logout} // 임시로 클릭 시 로그아웃
+              onClick={() => navigate("/mypage")}
             >
               <div className="w-8 h-8 rounded-full bg-gray-300 flex items-center justify-center">
                 <User className="w-5 h-5 text-white" />
@@ -80,7 +78,6 @@ const NavBar: React.FC = () => {
             </button>
           </>
         )}
-        
       </div>
     </nav>
   );

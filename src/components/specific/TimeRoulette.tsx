@@ -91,13 +91,13 @@ const TimeRoulette: React.FC<TimeRouletteProps> = ({
 
       ctx.restore();
 
-      // 포인터 (상단을 향하도록 수정)
+      // 포인터
       ctx.beginPath();
-      ctx.moveTo(center, size - 10);
-      ctx.lineTo(center - 10, size - 30);
-      ctx.lineTo(center + 10, size - 30);
+      ctx.lineTo(center - 10, 10);
+      ctx.lineTo(center + 10, 10);
+      ctx.lineTo(center, 30);
       ctx.closePath();
-      ctx.fillStyle = "#DC2626"; // Red
+      ctx.fillStyle = "#DC2626";
       ctx.fill();
     },
     [segments]
@@ -151,8 +151,9 @@ const TimeRoulette: React.FC<TimeRouletteProps> = ({
 
   // 3. 당첨 조각 결정
   const determineWinner = (finalRotation: number): string => {
-    // 포인터가 상단을 향하므로, 룰렛의 0도가 포인터 위치에 오도록 각도를 보정 (+90도)
-    let angle = (360 - finalRotation + 90) % 360;
+    const pointerAngle = 270; // 상단 중앙 포인터 각도
+
+    const angle = (pointerAngle - (finalRotation % 360) + 360) % 360;
 
     let startAngle = 0;
     const totalWeight = segments.reduce((sum, seg) => sum + seg.weight, 0);

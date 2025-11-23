@@ -1,6 +1,5 @@
 import React from "react";
 
-// DecisionPage에서 정의된 탭 유형을 재사용
 type DecisionMode = "roulette" | "vote";
 
 interface DecisionTabsProps {
