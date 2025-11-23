@@ -34,5 +34,41 @@
     "agreeTerms": true,
     "agreePrivacy": true,
     "createdAt": "2024-11-19"
+  },
+  {
+    "id": "m5",
+    "name": "이지은",
+    "email": "jieun@school.ac.kr",
+    "password": "Test1234!",
+    "agreeTerms": true,
+    "agreePrivacy": true,
+    "createdAt": "2024-11-20"
+  },
+  {
+    "id": "m6",
+    "name": "박서준",
+    "email": "seojun@school.ac.kr",
+    "password": "Test1234!",
+    "agreeTerms": true,
+    "agreePrivacy": true,
+    "createdAt": "2024-11-20"
+  },
+  {
+    "id": "m7",
+    "name": "최민지",
+    "email": "minji@school.ac.kr",
+    "password": "Test1234!",
+    "agreeTerms": true,
+    "agreePrivacy": true,
+    "createdAt": "2024-11-21"
+  },
+  {
+    "id": "m8",
+    "name": "정하늘",
+    "email": "haneul@school.ac.kr",
+    "password": "Test1234!",
+    "agreeTerms": true,
+    "agreePrivacy": true,
+    "createdAt": "2024-11-21"
   }
 ]

@@ -7,8 +7,8 @@
         "id": "m1-ts1",
         "timeLabel": "목요일 19:00-20:00",
         "availableMemberIds": ["m1", "m2", "m3", "m4"],
-            "voteAgreeIds": ["m1", "m2", "m3", "m4"],
-            "votePendingIds": []
+        "voteAgreeIds": ["m1", "m2", "m3", "m4"],
+        "votePendingIds": []
       },
       {
         "id": "m1-ts2",
@@ -50,6 +50,46 @@
         "availableMemberIds": ["m1", "m2"],
         "voteAgreeIds": ["m1", "m2"],
         "votePendingIds": []
+      }
+    ]
+  },
+  {
+    "groupId": "g3",
+    "meetingId": "m5",
+    "candidates": [
+      {
+        "id": "m5-ts1",
+        "timeLabel": "토요일 09:00-10:00",
+        "availableMemberIds": ["m1", "m5", "m6"],
+        "voteAgreeIds": ["m1", "m5"],
+        "votePendingIds": ["m6"]
+      },
+      {
+        "id": "m5-ts2",
+        "timeLabel": "토요일 10:00-11:00",
+        "availableMemberIds": ["m1", "m5", "m6"],
+        "voteAgreeIds": ["m5", "m6"],
+        "votePendingIds": ["m1"]
+      }
+    ]
+  },
+  {
+    "groupId": "g4",
+    "meetingId": "m6",
+    "candidates": [
+      {
+        "id": "m6-ts1",
+        "timeLabel": "일요일 18:00-20:00",
+        "availableMemberIds": ["m2", "m3", "m7", "m8"],
+        "voteAgreeIds": ["m2", "m7"],
+        "votePendingIds": ["m3", "m8"]
+      },
+      {
+        "id": "m6-ts2",
+        "timeLabel": "일요일 19:00-21:00",
+        "availableMemberIds": ["m2", "m3", "m7", "m8"],
+        "voteAgreeIds": ["m3", "m7", "m8"],
+        "votePendingIds": ["m2"]
       }
     ]
   }
