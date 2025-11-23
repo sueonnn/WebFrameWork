@@ -1,15 +1,31 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { GROUPS, MEETINGS } from "../mock";
-import { Users, Calendar, MapPin, LogOut, Clock } from "lucide-react";
+import { Users, Calendar, MapPin, LogOut, Clock, Copy} from "lucide-react";
 
 const MyPage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+
+  const [copiedGroupId, setCopiedGroupId] = useState<string | null>(null);
+
   const handleLogout = () => {
     logout();
     navigate("/");
+  };
+
+  // 초대 코드 복사
+  const handleCopyInviteCode = async (groupId: string, inviteCode?: string) => {
+    if (!inviteCode) return;
+
+    try {
+      await navigator.clipboard.writeText(inviteCode);
+      setCopiedGroupId(groupId);
+      setTimeout(() => setCopiedGroupId(null), 1500);
+    } catch (e) {
+      alert("클립보드 복사에 실패했어요. 직접 복사해 주세요.");
+    }
   };
 
   // 로그인 안 되어 있으면 로그인 페이지 유도
@@ -117,6 +133,26 @@ const MyPage: React.FC = () => {
                         {group.memberIds.length}명 참여 중
                       </span>
                     </div>
+
+                    {group.inviteCode && (
+                      <div className="mt-2 flex items-center justify-between">
+                        <p className="text-[11px] text-gray-500">
+                          초대 코드{" "}
+                          <span className="font-mono font-semibold text-gray-800">
+                            {group.inviteCode}
+                          </span>
+                        </p>
+                        <button
+                          className="inline-flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-indigo-600 bg-indigo-50 border border-indigo-100 rounded-full hover:bg-indigo-100 transition"
+                          onClick={() =>
+                            handleCopyInviteCode(group.id, group.inviteCode)
+                          }
+                        >
+                          <Copy className="w-3 h-3" />
+                          {copiedGroupId === group.id ? "복사됨!" : "복사"}
+                        </button>
+                      </div>
+                    )}
 
                     {meetings.length > 0 && (
                       <div className="mt-3 space-y-2">

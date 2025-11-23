@@ -31,5 +31,38 @@
     "participants": "3명 참석",
     "status": "70% 완료",
     "statusClasses": "bg-green-100 text-green-700"
+  },
+  {
+    "id": "m4",
+    "groupId": "g1",
+    "title": "기획 회의",
+    "date": "2024년 1월 20일",
+    "time": "토요일 15:00-17:00",
+    "location": "교내 스터디룸 301호",
+    "participants": "4명 참석",
+    "status": "진행 예정",
+    "statusClasses": "bg-yellow-100 text-yellow-800"
+  },
+  {
+    "id": "m5",
+    "groupId": "g3",
+    "title": "새해 첫 러닝",
+    "date": "2024년 1월 27일",
+    "time": "토요일 09:00-10:30",
+    "location": "뚝섬 한강공원 러닝코스",
+    "participants": "3명 참석",
+    "status": "준비 중",
+    "statusClasses": "bg-blue-100 text-blue-700"
+  },
+  {
+    "id": "m6",
+    "groupId": "g4",
+    "title": "1월 정기 영화 모임",
+    "date": "2024년 1월 28일",
+    "time": "일요일 18:00-21:00",
+    "location": "신촌 CGV 로비 집결",
+    "participants": "4명 참석",
+    "status": "모집 중",
+    "statusClasses": "bg-purple-100 text-purple-700"
   }
 ]

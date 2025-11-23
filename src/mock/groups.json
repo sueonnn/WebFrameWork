@@ -4,7 +4,7 @@
     "name": "언제봐 프로젝트 팀",
     "description": "캡스톤 팀 모임",
     "memberIds": ["m1", "m2", "m3", "m4"],
-    "inviteCode": "AB12CD34",    
+    "inviteCode": "AB12CD34",
     "createdAt": "2024-01-01"
   },
   {
@@ -12,7 +12,23 @@
     "name": "독서 모임",
     "description": "토요일 오후 독서 스터디",
     "memberIds": ["m2", "m4"],
-    "inviteCode": "EF56GH78",      
+    "inviteCode": "EF56GH78",
     "createdAt": "2024-01-05"
+  },
+  {
+    "id": "g3",
+    "name": "토요일 러닝 크루",
+    "description": "한강 러닝 & 산책 모임",
+    "memberIds": ["m1", "m5", "m6"],
+    "inviteCode": "RUN90876",
+    "createdAt": "2024-01-10"
+  },
+  {
+    "id": "g4",
+    "name": "영화 덕후 모임",
+    "description": "일요일 저녁 영화 감상 & 수다",
+    "memberIds": ["m2", "m3", "m7", "m8"],
+    "inviteCode": "MV12LO34",
+    "createdAt": "2024-01-12"
   }
 ]
