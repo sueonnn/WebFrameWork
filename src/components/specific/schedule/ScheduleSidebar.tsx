@@ -20,7 +20,6 @@ export default function ScheduleSidebar({ totalHours, groupId }: Props) {
       />
       <MySummaryCard totalHours={totalHours} />
       <OverlapTopCard />
-      <NextStepCard groupId={groupId} />
 
       {/* 위치 설정 팝업 */}
       <LocationModal
@@ -116,51 +115,3 @@ function OverlapTopCard() {
   );
 }
 
-function NextStepCard({ groupId }: { groupId: string }) {
-  const navigate = useNavigate();
-
-  const goRoulette = () => {
-    // 기본: 타임룰렛 탭
-    navigate(`/groups/${groupId}/decide`);
-  };
-
-  const goVote = () => {
-    // 같은 페이지로 가되, 나중에 vote 모드를 쓰고 싶으면 쿼리 사용 가능
-    navigate(`/groups/${groupId}/decide`);
-  }
-
-  return (
-    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
-      <h3 className="text-base font-semibold text-gray-900">다음 단계</h3>
-      <p className="mt-2 text-xs leading-relaxed text-gray-500">
-        시간 입력이 완료되면 결정 단계로 넘어가세요.
-      </p>
-
-      <button
-        onClick={goRoulette}
-        className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
-      >
-        <span className="inline-flex items-center gap-2 justify-center">
-          <svg
-            className="h-[1.25em] w-[1.25em] flex-shrink-0 translate-y-[0.5px]"
-            viewBox="0 0 2 2"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              d="M0.799922 0.0941124V0.377785H0.3C0.134297 0.377785 0 0.568342 0 0.803461C0 0.874961 0.0135937 0.94114 0.035625 1.00034L0.159375 0.875294C0.15375 0.85268 0.15 0.829068 0.15 0.803794C0.15 0.686068 0.217266 0.590956 0.3 0.590956H0.799922V0.874629L1.2 0.48687L0.799922 0.0941124ZM1.04063 0.873963C1.04625 0.896577 1.05 0.920189 1.05 0.945464C1.05 1.06319 0.982969 1.1583 0.9 1.1583H0.400078V0.874629L0.035625 1.27171L0.400078 1.65514V1.37147H0.9C1.0657 1.37147 1.2 1.18092 1.2 0.945796C1.2 0.874296 1.18641 0.808117 1.16438 0.748921L1.04063 0.873963Z"
-              fill="white"
-            />
-          </svg>
-          타임룰렛으로 결정
-        </span>
-      </button>
-
-      <button
-        onClick={goVote}
-        className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition">
-        투표로 결정
-      </button>
-    </div>
-  );
-}
