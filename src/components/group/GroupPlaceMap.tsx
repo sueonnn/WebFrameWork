@@ -141,7 +141,7 @@ export const GroupPlaceMap = ({ members, radius, onStationsChange }: Props) => {
       // 위치 원(작게)
       const circle = new kakao.maps.Circle({
         center: new kakao.maps.LatLng(m.pos.lat, m.pos.lng),
-        radius: 26, // ≒ 26m
+        radius: 26, // 26m
         strokeWeight: 3,
         strokeColor: color,
         strokeOpacity: 0.9,
@@ -153,7 +153,7 @@ export const GroupPlaceMap = ({ members, radius, onStationsChange }: Props) => {
       overlayRefs.current.circles.push(circle);
 
       // 이름 라벨
-      // ✅ 라벨을 앵커로 고정하고, 고정 px 스페이서로 간격 확보
+      // 라벨을 앵커로 고정하고, 고정 px 스페이서로 간격 확보
       const wrapper = document.createElement('div');
       wrapper.style.pointerEvents = 'none'; // 맵 인터랙션 방해 X
 

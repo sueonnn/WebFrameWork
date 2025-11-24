@@ -1,14 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import { Station } from "./types";
 
-type Props = { topStations: Station[] };
+type Props = { topStations: Station[]; groupId: string; };
 
-export const GroupPlaceStationList = ({ topStations }: Props) => {
+export const GroupPlaceStationList = ({ topStations, groupId }: Props) => {
   const nav = useNavigate();
 
+  
   const openCafes = (s: Station) => {
     nav(
-      `/stations/cafes?name=${encodeURIComponent(s.name)}&lat=${s.pos.lat}&lng=${s.pos.lng}`
+      `/stations/cafes` +
+        `?name=${encodeURIComponent(s.name)}` +
+        `&lat=${s.pos.lat}` +
+        `&lng=${s.pos.lng}` +
+        `&groupId=${groupId}`      
     );
   };
 

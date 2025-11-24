@@ -1,8 +1,14 @@
 // src/components/specific/group/GroupSidebar.tsx
 import React, { useMemo } from "react";
 import { useGroupScheduleStore } from "../../../stores/groupScheduleStore";
+import { useNavigate } from "react-router-dom";
 
-export default function GroupSidebar() {
+
+type GroupSidebarProps = {
+  groupId: string;
+};
+
+export default function GroupSidebar({ groupId }: GroupSidebarProps) {
   const { groupSchedules, memberCount } = useGroupScheduleStore();
 
   const activeWeek = "this"; // 필요 시 부모 페이지에서 prop으로 받을 수도 있음
@@ -49,8 +55,8 @@ export default function GroupSidebar() {
     <aside className="w-[320px] flex flex-col gap-6">
       <Top3Card data={top3} />
       <GoldenTimeCard golden={golden} />
-      <SmartPlaceCard />
-      <NextStepCard />
+      <SmartPlaceCard groupId={groupId} />
+      <NextStepCard groupId={groupId} />
     </aside>
   );
 }
@@ -126,8 +132,9 @@ function GoldenTimeCard({ golden }: { golden: any | null }) {
   );
 }
 
-function SmartPlaceCard() {
+function SmartPlaceCard({ groupId }: { groupId: string }) {
   const { memberCount } = useGroupScheduleStore();
+  const navigate = useNavigate();              
 
   const items =
     memberCount <= 3
@@ -151,14 +158,27 @@ function SmartPlaceCard() {
         </div>
       ))}
 
-      <button className="w-full mt-3 border border-indigo-200 text-indigo-600 rounded-full py-2 text-sm font-medium hover:bg-indigo-50 transition">
+      <button 
+      onClick={() => navigate(`/groups/recommend?groupId=${groupId}`)}
+      className="w-full mt-3 border border-indigo-200 text-indigo-600 rounded-full py-2 text-sm font-medium hover:bg-indigo-50 transition">
         더 많은 장소 보기
       </button>
     </div>
   );
 }
 
-function NextStepCard() {
+function NextStepCard({ groupId }: { groupId: string }) {
+
+   const goRoulette = () => {
+    // 기본: 타임룰렛 탭
+    navigate(`/groups/${groupId}/decide`);
+  };
+
+  const goVote = () => {
+    navigate(`/groups/${groupId}/decide`);
+  };
+
+  const navigate = useNavigate();
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
       <h3 className="text-base font-semibold text-gray-900">다음 단계</h3>
@@ -166,11 +186,13 @@ function NextStepCard() {
         가장 많은 사람이 가능한 시간을 기반으로 다음 단계를 선택하세요.
       </p>
 
-      <button className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition">
+      <button className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
+      onClick={goRoulette}>
         타임룰렛으로 결정
       </button>
 
-      <button className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition">
+      <button className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition"
+      onClick={goVote}>
         투표로 결정
       </button>
     </div>

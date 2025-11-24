@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import dayjs from "dayjs";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { useGroupScheduleStore } from "../stores/groupScheduleStore";
 import { useUserSettingStore } from "../stores/userScheduleSettingStore";
@@ -15,8 +15,11 @@ import TimelineHeatmapLegend from "../components/specific/group/timeline/Timelin
 import TimelineWeekTabs from "../components/specific/group/timeline/TimelineWeekTabs";
 import TimelineHeatmapTable from "../components/specific/group/timeline/TimelineHeatmapTable";
 
+import { GROUPS } from "../mock"; 
+
 export default function GroupTimelinePage() {
   const navigate = useNavigate();
+  const { groupId: routeGroupId } = useParams<{ groupId: string }>();
 
   const [activeTab, setActiveTab] = useState<"this" | "next">("this");
 
@@ -26,6 +29,17 @@ export default function GroupTimelinePage() {
   // 그룹 정보 + 스케줄 setter
   const { memberIds, groupName, memberCount, groupSchedules, setGroupSchedules } =
     useGroupScheduleStore();
+
+
+  // Mock 데이터로 기본 그룹 정보 세팅
+  // 일단 예시로 첫 번째 그룹(g1)을 기준으로 사용
+  const mockGroup = GROUPS[0];
+  const currentGroupId = routeGroupId ?? mockGroup.id;
+  const isDefaultGroupName = !groupName || groupName === "우리 팀";
+  const headerGroupName = isDefaultGroupName ? mockGroup.name : groupName;
+  const headerMemberCount = memberCount || mockGroup.memberIds.length;
+
+  console.log("Timeline header group:", headerGroupName, headerMemberCount);
 
   // 사용자 설정
   const { showWorkingHoursOnly, setShowWorkingHoursOnly } = useUserSettingStore();
@@ -64,7 +78,7 @@ export default function GroupTimelinePage() {
 
   const getColor = (value: number) => {
     if (!value) return "#ffffff";
-    const ratio = value / memberCount;
+    const ratio = value / headerMemberCount;
     return `rgba(79,70,229,${ratio * 0.9 + 0.1})`;
   };
 
@@ -73,8 +87,8 @@ export default function GroupTimelinePage() {
       <div className="mx-auto w-[1200px] flex flex-col gap-8">
         {/* 상단 헤더 컴포넌트 */}
         <TimelineHeader
-          groupName={groupName}
-          memberCount={memberCount}
+          groupName={headerGroupName}
+          memberCount={headerMemberCount}
           onClickSchedule={() => navigate("/groups/schedule")}
         />
 
@@ -107,7 +121,7 @@ export default function GroupTimelinePage() {
           </div>
 
           {/* 우측 패널 */}
-          <GroupSidebar />
+          <GroupSidebar groupId={currentGroupId} />
         </div>
       </div>
     </section>

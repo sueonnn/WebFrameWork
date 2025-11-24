@@ -2,6 +2,7 @@
 
 export interface MeetingInfo {
   id: string;                // 모임 ID
+  groupId: string;           // 그룹 ID
   title: string;             // 모임 이름
   date: string;              // "2024년 1월 15일" 형태
   time: string;              // "목요일 19:00~20:00"

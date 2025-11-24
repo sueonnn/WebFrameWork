@@ -46,7 +46,7 @@ export default function GroupJoinForm() {
    const handleModalClose = () => {
     setShowModal(false);
     if (canGoSchedule) {
-      navigate("/groups/schedule"); 
+      navigate("/groups/timeline"); 
       setCanGoSchedule(false);      
     }
   };
