@@ -55,21 +55,38 @@
 
 // export default DecisionPage;
 
-import React, { useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import React, { useMemo } from "react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import DecisionTabs from "../components/specific/DecisionTabs";
 import RoulettePanel from "../components/specific/RoulettePanel";
 import VotePanel from "../components/specific/VotePanel";
-import { GROUPS, GROUP_TIME_DECISIONS, MEETING_INFOS } from "../mock";
+import { GROUPS, GROUP_TIME_DECISIONS } from "../mock";
+import { useMeetingInfoStore } from "../stores/meetingInfoStore";
 
 type DecisionMode = "roulette" | "vote";
 
 const DecisionPage: React.FC = () => {
   const { groupId } = useParams<{ groupId: string }>();
-  const [mode, setMode] = useState<DecisionMode>("roulette");
+  
+  // URL 쿼리에서 tab 읽기
+  const [searchParams, setSearchParams] = useSearchParams();
+  const mode: DecisionMode =
+    searchParams.get("tab") === "vote" ? "vote" : "roulette";
 
-  // ✅ URL 파라미터가 없을 때 mock에서 첫 그룹을 fallback으로 사용
+  //  탭 변경 시 URL 쿼리도 함께 변경
+  const changeMode = (next: DecisionMode) => {
+    if (next === "roulette") {
+      // 기본 탭은 쿼리 제거
+      searchParams.delete("tab");
+      setSearchParams(searchParams, { replace: true });
+    } else {
+      setSearchParams({ tab: "vote" }, { replace: true });
+    }
+  };
+
+
+  // URL 파라미터가 없을 때 mock에서 첫 그룹을 fallback으로 사용
   const gid = useMemo(() => {
     if (groupId) return groupId;
     if (GROUP_TIME_DECISIONS.length > 0) return GROUP_TIME_DECISIONS[0].groupId;
@@ -84,13 +101,10 @@ const DecisionPage: React.FC = () => {
     [gid]
   );
 
-  const meetingInfo = useMemo(
-    () =>
-      decision
-        ? MEETING_INFOS.find((m) => m.id === decision.meetingId)
-        : undefined,
-    [decision]
-  );
+  const meetingInfo = useMeetingInfoStore((s) => {
+    if (!decision) return undefined;
+    return s.getByMeetingId(decision.meetingId);
+  });
 
   if (!gid) {
     return (
@@ -113,7 +127,7 @@ const DecisionPage: React.FC = () => {
         <span className="text-sm font-semibold">시간 입력으로 돌아가기</span>
       </Link>
 
-      {/* ✅ mock 기반 그룹/모임 정보 표시 */}
+      {/*  mock 기반 그룹/모임 정보 표시 */}
       <h1 className="text-3xl font-bold text-gray-800">
         {group?.name ?? "그룹 시간 결정"}
       </h1>
@@ -132,16 +146,16 @@ const DecisionPage: React.FC = () => {
           : "투표 결과를 보고 최적의 시간을 결정해요."}
       </p>
 
-      <DecisionTabs mode={mode} setMode={setMode} />
+      <DecisionTabs mode={mode} setMode={changeMode} />
 
       <div className="mt-8">
         {mode === "roulette" && (
-          <RoulettePanel groupId={gid} onSwitchToVote={() => setMode("vote")} />
+          <RoulettePanel groupId={gid} onSwitchToVote={() => changeMode("vote")} />
         )}
         {mode === "vote" && (
           <VotePanel
             groupId={gid}
-            onSwitchToRoulette={() => setMode("roulette")}
+            onSwitchToRoulette={() => changeMode("roulette")}
           />
         )}
       </div>

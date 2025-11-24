@@ -25,12 +25,14 @@ const HistoryDetailPage: React.FC= () => {
   const safeMeeting: MeetingInfo =
     meeting ?? {
       id: "default-meeting",
+      groupId : "m1",
       title: "알 수 없는 모임",
       date: "",
       time: "",
       location: "",
       participants: [],
     };
+
 
   const participants = safeMeeting.participants;
 

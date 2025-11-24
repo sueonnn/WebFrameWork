@@ -8,7 +8,7 @@ import StationCafeHeader from "../components/group/StationCafeHeader";
 import SelectedCafePanel from "../components/group/SelectedCafePanel";
 import CafeList from "../components/group/CafeList";
 
-import { MEETING_INFOS } from "../mock"; 
+import { useMeetingInfoStore } from "../stores/meetingInfoStore";
 
 // 공통: SVG 핀(색상 커스터마이즈)
 const makePin = (kakao: any, fill: string) => {
@@ -35,6 +35,10 @@ export default function StationCafePage() {
   const stationLng = parseFloat(sp.get("lng") || "0");
 
   const groupId = sp.get("groupId") || "g1";
+
+  const updateLocationByGroupId = useMeetingInfoStore(
+    (s) => s.updateLocationByGroupId
+  );
 
   const center = useMemo(
     () => ({ lat: stationLat, lng: stationLng }),
@@ -164,15 +168,10 @@ export default function StationCafePage() {
       ? `${selected.name} (${selected.address})`
       : selected.name;
 
-    // Mock 데이터: 이 groupId의 meetingsInfo location 업데이트
-    MEETING_INFOS.forEach((m) => {
-      if (m.groupId === groupId) {
-        m.location = fullLocation;
-      }
-    });
+    updateLocationByGroupId(groupId, fullLocation);
 
     // 원하는 곳으로 이동 (여기서는 뒤로가기)
-    navigate(-1);
+    navigate(`/groups/${groupId}/timeline`);
   };
 
   // 3) 카페 검색(카테고리 CE7) + 역 기준 가장 가까운 15개만 하늘색 핀으로 렌더

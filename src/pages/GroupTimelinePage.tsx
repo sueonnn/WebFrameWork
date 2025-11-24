@@ -16,6 +16,7 @@ import TimelineWeekTabs from "../components/specific/group/timeline/TimelineWeek
 import TimelineHeatmapTable from "../components/specific/group/timeline/TimelineHeatmapTable";
 
 import { GROUPS } from "../mock"; 
+import { useMeetingInfoStore } from "../stores/meetingInfoStore";
 
 export default function GroupTimelinePage() {
   const navigate = useNavigate();
@@ -38,6 +39,11 @@ export default function GroupTimelinePage() {
   const isDefaultGroupName = !groupName || groupName === "우리 팀";
   const headerGroupName = isDefaultGroupName ? mockGroup.name : groupName;
   const headerMemberCount = memberCount || mockGroup.memberIds.length;
+
+  const meetingInfo = useMeetingInfoStore((s) =>
+    s.getByGroupId(currentGroupId)
+  );
+  const confirmedLocation = meetingInfo?.location ?? "아직 장소 미정";
 
   console.log("Timeline header group:", headerGroupName, headerMemberCount);
 
@@ -121,7 +127,10 @@ export default function GroupTimelinePage() {
           </div>
 
           {/* 우측 패널 */}
-          <GroupSidebar groupId={currentGroupId} />
+          <GroupSidebar
+            groupId={currentGroupId}
+            confirmedLocation={confirmedLocation}
+          />
         </div>
       </div>
     </section>

@@ -1,11 +1,12 @@
-// src/components/specific/group/GroupSidebar.tsx
 import React, { useMemo } from "react";
 import { useGroupScheduleStore } from "../../../stores/groupScheduleStore";
 import { useNavigate } from "react-router-dom";
+import { useMeetingInfoStore } from "../../../stores/meetingInfoStore";
 
 
 type GroupSidebarProps = {
   groupId: string;
+  confirmedLocation: string; 
 };
 
 export default function GroupSidebar({ groupId }: GroupSidebarProps) {
@@ -134,10 +135,19 @@ function GoldenTimeCard({ golden }: { golden: any | null }) {
 
 function SmartPlaceCard({ groupId }: { groupId: string }) {
   const { memberCount } = useGroupScheduleStore();
-  const navigate = useNavigate();              
+  const navigate = useNavigate();       
+  const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(groupId));
+  const confirmedLocation = meetingInfo?.location;        
 
   const items =
-    memberCount <= 3
+    confirmedLocation 
+      ? [
+          {
+            place: confirmedLocation,
+            distance: "확정된 모임 장소",
+          },
+        ]
+      : memberCount <= 3
       ? [
           { place: "강남역", distance: "평균 이동시간 23분" },
           { place: "홍대입구역", distance: "평균 28분 소요" },
@@ -159,7 +169,7 @@ function SmartPlaceCard({ groupId }: { groupId: string }) {
       ))}
 
       <button 
-      onClick={() => navigate(`/groups/recommend?groupId=${groupId}`)}
+      onClick={() => navigate(`/groups/${groupId}/recommend`)}
       className="w-full mt-3 border border-indigo-200 text-indigo-600 rounded-full py-2 text-sm font-medium hover:bg-indigo-50 transition">
         더 많은 장소 보기
       </button>
@@ -169,13 +179,14 @@ function SmartPlaceCard({ groupId }: { groupId: string }) {
 
 function NextStepCard({ groupId }: { groupId: string }) {
 
-   const goRoulette = () => {
-    // 기본: 타임룰렛 탭
-    navigate(`/groups/${groupId}/decide`);
+  const goRoulette = () => {
+    // 타임룰렛 탭
+    navigate(`/groups/${groupId}/decide?tab=roulette`);
   };
 
   const goVote = () => {
-    navigate(`/groups/${groupId}/decide`);
+    // 투표 탭
+    navigate(`/groups/${groupId}/decide?tab=vote`);
   };
 
   const navigate = useNavigate();

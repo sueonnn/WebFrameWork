@@ -1,8 +1,10 @@
 import React, { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Task } from "../types/Task";
-import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
+import { MEETING_INFOS, TASKS_BY_MEETING, CURRENT_USER } from "../mock";
 import type { MeetingInfo } from "../types/MeetingInfo";
+import { useMeetingInfoStore } from "../stores/meetingInfoStore";
+import { useAuth } from "../contexts/AuthContext";
 
 // 분리한 컴포넌트들
 import ChecklistHeader from "../components/specific/checklist/ChecklistHeader";
@@ -18,9 +20,13 @@ const CheckListPage: React.FC = () => {
 
   const targetId = meetingId ?? "m1"; // 없으면 기본값 m1
 
-  const meeting: MeetingInfo | undefined = MEETING_INFOS.find(
-    (m) => m.id === targetId
+  const meetingFromStore = useMeetingInfoStore((s) =>
+    s.getByMeetingId(targetId)
   );
+
+  const meeting: MeetingInfo | undefined =
+    meetingFromStore ?? MEETING_INFOS.find((m) => m.id === targetId);
+
   if (!meeting) return <div>Meeting not found</div>;
 
   const members = meeting.participants;
@@ -33,6 +39,8 @@ const CheckListPage: React.FC = () => {
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter((t) => t.done).length;
   const progress = totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
+
+  const { user } = useAuth();
 
   // 체크박스 토글
   const toggleTaskDone = (id: string) => {
@@ -63,10 +71,12 @@ const CheckListPage: React.FC = () => {
       }
     }
 
+    const addedBy = user?.name ?? "나";
+
     const newTask: Task = {
       id: Date.now().toString(),
       title,
-      addedBy: "나",
+      addedBy,
       date: meeting.date,
       done: false,
       assignee,
