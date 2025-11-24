@@ -1,25 +1,43 @@
 import { useNavigate } from "react-router-dom";
+import LocationModal from "./LocationModal";
+import { useState } from "react";
 
 type Props = {
   totalHours: number;
-  groupId: string;   
+  groupId: string;
 };
 
 
 export default function ScheduleSidebar({ totalHours, groupId }: Props) {
+  const [openLocationModal, setOpenLocationModal] = useState(false);
+  const [address, setAddress] = useState("");
+
   return (
     <aside className="w-[320px] flex flex-col gap-6">
-      <LocationCard />
+      <LocationCard
+        onOpen={() => setOpenLocationModal(true)}
+        address={address}
+      />
       <MySummaryCard totalHours={totalHours} />
       <OverlapTopCard />
-      <NextStepCard groupId={groupId} /> 
+      <NextStepCard groupId={groupId} />
+
+      {/* 위치 설정 팝업 */}
+      <LocationModal
+        isOpen={openLocationModal}
+        onClose={() => setOpenLocationModal(false)}
+        onSelectAddress={(addr) => setAddress(addr)}
+      />
+
     </aside>
   );
 }
 
+
 /** ===== 내부 카드들 (과분리 방지: 한 파일에 캡슐화) ===== */
 
-function LocationCard() {
+function LocationCard({ onOpen, address }: { onOpen: () => void; address: string }) {
+
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -36,12 +54,14 @@ function LocationCard() {
         </div>
 
         <p className="mb-6 text-sm leading-relaxed text-gray-600">
-          위치를 설정하면 스마트 장소<br />추천을 받을 수 있어요.
+          {address ? address : "위치를 설정하면 스마트 장소 추천을 받을 수 있어요."}
         </p>
 
         <button
+          onClick={onOpen}
           className="w-full h-11 rounded-full bg-gradient-to-r from-indigo-600 to-indigo-700 text-white text-sm font-semibold shadow
-                     hover:from-indigo-600/90 hover:to-indigo-700/90 transition">
+                     hover:from-indigo-600/90 hover:to-indigo-700/90 transition"
+        >
           <span className="inline-flex items-center gap-2 justify-center">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -54,6 +74,7 @@ function LocationCard() {
     </div>
   );
 }
+
 
 function MySummaryCard({ totalHours }: { totalHours: number }) {
   return (
@@ -98,7 +119,7 @@ function OverlapTopCard() {
 function NextStepCard({ groupId }: { groupId: string }) {
   const navigate = useNavigate();
 
-   const goRoulette = () => {
+  const goRoulette = () => {
     // 기본: 타임룰렛 탭
     navigate(`/groups/${groupId}/decide`);
     // 혹시 쿼리로 모드까지 보내고 싶으면:
@@ -120,7 +141,7 @@ function NextStepCard({ groupId }: { groupId: string }) {
       </p>
 
       <button
-        onClick={goRoulette}  
+        onClick={goRoulette}
         className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
       >
         <span className="inline-flex items-center gap-2 justify-center">
@@ -140,8 +161,8 @@ function NextStepCard({ groupId }: { groupId: string }) {
       </button>
 
       <button
-       onClick={goVote}
-       className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition">
+        onClick={goVote}
+        className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition">
         투표로 결정
       </button>
     </div>
