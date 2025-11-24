@@ -8,6 +8,8 @@ import StationCafeHeader from "../components/group/StationCafeHeader";
 import SelectedCafePanel from "../components/group/SelectedCafePanel";
 import CafeList from "../components/group/CafeList";
 
+import { MEETING_INFOS } from "../mock"; 
+
 // 공통: SVG 핀(색상 커스터마이즈)
 const makePin = (kakao: any, fill: string) => {
   const svg = `
@@ -31,6 +33,9 @@ export default function StationCafePage() {
   const stationName = sp.get("name") || "알 수 없는 역";
   const stationLat = parseFloat(sp.get("lat") || "0");
   const stationLng = parseFloat(sp.get("lng") || "0");
+
+  const groupId = sp.get("groupId") || "g1";
+
   const center = useMemo(
     () => ({ lat: stationLat, lng: stationLng }),
     [stationLat, stationLng]
@@ -151,6 +156,25 @@ export default function StationCafePage() {
     }
   };
 
+  // 선택된 카페를 이 그룹의 확정 장소로 저장하는 함수
+  const handleConfirm = () => {
+    if (!selected) return;
+
+    const fullLocation = selected.address
+      ? `${selected.name} (${selected.address})`
+      : selected.name;
+
+    // Mock 데이터: 이 groupId의 meetingsInfo location 업데이트
+    MEETING_INFOS.forEach((m) => {
+      if (m.groupId === groupId) {
+        m.location = fullLocation;
+      }
+    });
+
+    // 원하는 곳으로 이동 (여기서는 뒤로가기)
+    navigate(-1);
+  };
+
   // 3) 카페 검색(카테고리 CE7) + 역 기준 가장 가까운 15개만 하늘색 핀으로 렌더
   useEffect(() => {
     if (!ready || !mapRef.current) return;
@@ -212,10 +236,12 @@ export default function StationCafePage() {
 
   return (
     <section className="p-6">
-      <StationCafeHeader
+       <StationCafeHeader
         stationName={stationName}
         cafeCount={cafes.length}
         onBack={() => navigate(-1)}
+        onConfirm={handleConfirm}        
+        canConfirm={!!selected}          
       />
 
       {/* 좌: 지도 / 우: 리스트 */}

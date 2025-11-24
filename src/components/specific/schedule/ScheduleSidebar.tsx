@@ -101,16 +101,12 @@ function NextStepCard({ groupId }: { groupId: string }) {
    const goRoulette = () => {
     // 기본: 타임룰렛 탭
     navigate(`/groups/${groupId}/decide`);
-    // 혹시 쿼리로 모드까지 보내고 싶으면:
-    // navigate(`/groups/${groupId}/decide?mode=roulette`);
   };
 
   const goVote = () => {
     // 같은 페이지로 가되, 나중에 vote 모드를 쓰고 싶으면 쿼리 사용 가능
     navigate(`/groups/${groupId}/decide`);
-    // 또는:
-    // navigate(`/groups/${groupId}/decide?mode=vote`);
-  };
+  }
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
