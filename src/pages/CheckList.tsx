@@ -1,14 +1,16 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+
 import { Task } from "../types/Task";
 import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
 import type { MeetingInfo } from "../types/MeetingInfo";
+
 import { useAuth } from "../contexts/AuthContext";
 import { useTaskStore } from "../stores/checklist/useTaskStore";
 import { useHistoryStore } from "../stores/checklist/useHistoryStore";
 import type { Meeting } from "../types/history";
 
-// 분리한 컴포넌트들
+// UI Components
 import ChecklistHeader from "../components/specific/checklist/ChecklistHeader";
 import ChecklistMeetingCard from "../components/specific/checklist/ChecklistMeetingCard";
 import ChecklistAddTask from "../components/specific/checklist/ChecklistAddTask";
@@ -20,8 +22,8 @@ import ChecklistFinalCTA from "../components/specific/checklist/ChecklistFinalCT
 const CheckListPage: React.FC = () => {
   const { meetingId } = useParams<{ meetingId?: string }>();
   const navigate = useNavigate();
-
   const { user } = useAuth();
+
   const userName = user?.name ?? "이름 없음";
   const { updateOrAddHistory } = useHistoryStore();
 
@@ -33,6 +35,7 @@ const CheckListPage: React.FC = () => {
     );
   }
 
+  // meeting 정보
   const meeting: MeetingInfo | undefined = MEETING_INFOS.find(
     (m) => m.id === meetingId
   );
@@ -47,16 +50,21 @@ const CheckListPage: React.FC = () => {
 
   const members = meeting.participants;
 
+  // Zustand Task Store
+  const {
+    tasksByMeeting,
+    addTask: storeAddTask,
+    deleteTask: storeDeleteTask,
+    updateTask,
+    setTasks,
+  } = useTaskStore();
 
-  const { tasksByMeeting, addTask: storeAddTask, deleteTask: storeDeleteTask, updateTask, setTasks } =
-    useTaskStore();
-
-  // meetingId별 초기 로딩
+  // meetingId 최초 접근 시 mock에서 초기 값 로드
   useEffect(() => {
     if (!tasksByMeeting[meetingId]) {
       setTasks(meetingId, TASKS_BY_MEETING[meetingId] ?? []);
     }
-  }, [meetingId, tasksByMeeting]);
+  }, [meetingId, tasksByMeeting, setTasks]);
 
   const tasks = tasksByMeeting[meetingId] ?? [];
 
@@ -68,15 +76,19 @@ const CheckListPage: React.FC = () => {
   const progress =
     totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
 
-
+  // 체크박스 토글
   const toggleTaskDone = (id: string) => {
-    updateTask(meetingId, id, { done: !tasks.find((t) => t.id === id)?.done });
+    updateTask(meetingId, id, {
+      done: !tasks.find((t) => t.id === id)?.done,
+    });
   };
 
+  // 담당자 변경
   const changeAssignee = (id: string, name: string | null) => {
     updateTask(meetingId, id, { assignee: name });
   };
 
+  // 신규 할 일 추가
   const addTask = () => {
     if (!newTaskText.trim()) return;
 
@@ -93,8 +105,9 @@ const CheckListPage: React.FC = () => {
     }
 
     const today = new Date();
-    const formattedToday = `${today.getFullYear()}년 ${today.getMonth() + 1
-      }월 ${today.getDate()}일`;
+    const formattedToday = `${today.getFullYear()}년 ${
+      today.getMonth() + 1
+    }월 ${today.getDate()}일`;
 
     const newTask: Task = {
       id: Date.now().toString(),
@@ -109,14 +122,15 @@ const CheckListPage: React.FC = () => {
     setNewTaskText("");
   };
 
-
+  // 삭제
   const deleteTask = (id: string) => {
     storeDeleteTask(meetingId, id);
   };
 
-
+  // 멤버별 통계
   const memberStats = useMemo(() => {
     const stats: Record<string, { done: number; total: number }> = {};
+
     members.forEach((m) => {
       stats[m] = { done: 0, total: 0 };
     });
@@ -130,11 +144,14 @@ const CheckListPage: React.FC = () => {
     return stats;
   }, [tasks, members]);
 
+  // 히스토리 저장
   const handleSaveHistory = () => {
     const progressStr = `${progress}% 완료`;
 
     const today = new Date();
-    const formatted = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${today.getDate()}일`;
+    const formatted = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${
+      today.getDate()
+    }일`;
 
     const dataToSave: Meeting = {
       id: meeting.id,
@@ -149,14 +166,13 @@ const CheckListPage: React.FC = () => {
         progress === 100
           ? "bg-green-100 text-green-700"
           : progress >= 70
-            ? "bg-blue-100 text-blue-700"
-            : "bg-yellow-100 text-yellow-800",
+          ? "bg-blue-100 text-blue-700"
+          : "bg-yellow-100 text-yellow-800",
     };
 
     updateOrAddHistory(dataToSave);
     navigate("/history");
   };
-
 
   return (
     <div className="min-h-screen bg-[#F7F7FB] flex justify-center py-12">
@@ -164,7 +180,7 @@ const CheckListPage: React.FC = () => {
         <ChecklistHeader />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-
+          {/* LEFT */}
           <div className="col-span-2 flex flex-col gap-8">
             <ChecklistMeetingCard meeting={meeting} members={members} />
 
@@ -189,7 +205,7 @@ const CheckListPage: React.FC = () => {
             />
           </div>
 
-
+          {/* RIGHT */}
           <div className="col-span-1 flex flex-col gap-8 self-start">
             <ChecklistParticipants members={members} />
             <ChecklistStatsByMember

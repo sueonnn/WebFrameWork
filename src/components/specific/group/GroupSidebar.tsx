@@ -1,18 +1,36 @@
 import React, { useMemo } from "react";
+import { useGroupScheduleStore } from "../../../stores/groupScheduleStore";
 import { useNavigate } from "react-router-dom";
+import { useMeetingInfoStore } from "../../../stores/meetingInfoStore";
+
+type MergedSchedule = {
+  this: Record<string, number>;
+  next: Record<string, number>;
+};
 
 type GroupSidebarProps = {
   groupId: string;
-  merged: {
-    this: Record<string, number>;
-    next: Record<string, number>;
-  };
-  memberCount: number;
+  /** 페이지에서 미리 머지한 스케줄을 넘기고 싶을 때 (옵션) */
+  merged?: MergedSchedule;
+  /** 멤버 수를 직접 넘기고 싶을 때 (옵션, 없으면 store 값 사용) */
+  memberCount?: number;
+  /** 확정된 장소를 부모에서 넘길 때 (옵션, 없으면 store에서 조회) */
+  confirmedLocation?: string;
 };
 
-export default function GroupSidebar({ groupId, merged, memberCount }: GroupSidebarProps) {
-  const activeWeek = "this";
-  const weekData = merged[activeWeek] || {};
+export default function GroupSidebar({ groupId, merged, memberCount,confirmedLocation, }: GroupSidebarProps) {
+   // store 기반 그룹 스케줄 / 멤버 수
+  const { groupSchedules: storeSchedules, memberCount: storeMemberCount } =
+    useGroupScheduleStore();
+
+  const activeWeek: keyof MergedSchedule = "this";
+
+   // 👉 weekData는 우선순위: props.merged > store.groupSchedules
+  const weekData: Record<string, number> =
+    merged?.[activeWeek] || storeSchedules[activeWeek] || {};
+
+  // 👉 멤버 수도 props > store 순으로 사용
+  const effectiveMemberCount = memberCount ?? storeMemberCount ?? 1; // 0으로 나눔 방지
 
   const top3 = useMemo(() => {
     const entries = Object.entries(weekData);
@@ -28,11 +46,11 @@ export default function GroupSidebar({ groupId, merged, memberCount }: GroupSide
         return {
           rank: idx + 1,
           time: `${weekdays[day]}요일 ${hour}:00 - ${hour + 1}:00`,
-          percent: Math.round((count / memberCount) * 100),
-          members: `${count}/${memberCount}명 가능`,
+          percent: Math.round((count / effectiveMemberCount) * 100),
+          members: `${count}/${effectiveMemberCount}명 가능`,
         };
       });
-  }, [weekData, memberCount]);
+  }, [weekData, effectiveMemberCount]);
 
   const golden = useMemo(() => {
     const entries = Object.entries(weekData);
@@ -45,15 +63,19 @@ export default function GroupSidebar({ groupId, merged, memberCount }: GroupSide
     return {
       time: `${weekdays[day]}요일 ${hour}:00~${hour + 1}:00`,
       count: bestCount,
-      percent: Math.round((bestCount / memberCount) * 100),
+      percent: Math.round((bestCount / effectiveMemberCount) * 100),
     };
-  }, [weekData, memberCount]);
+  }, [weekData, effectiveMemberCount]);
 
   return (
     <aside className="w-[320px] flex flex-col gap-6">
       <Top3Card data={top3} />
       <GoldenTimeCard golden={golden} />
-      <SmartPlaceCard groupId={groupId} memberCount={memberCount} />
+      <SmartPlaceCard
+        groupId={groupId}
+        memberCount={effectiveMemberCount}
+        confirmedLocation={confirmedLocation}
+      />
       <NextStepCard groupId={groupId} />
     </aside>
   );
@@ -130,11 +152,24 @@ function GoldenTimeCard({ golden }: { golden: any | null }) {
   );
 }
 
-function SmartPlaceCard({ groupId, memberCount }: { groupId: string; memberCount: number }) {
+function SmartPlaceCard({ groupId, memberCount, confirmedLocation }: { groupId: string, memberCount: number; confirmedLocation?: string; }) {
   const navigate = useNavigate();
+  const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(groupId));
+
+
+  // prop으로 온 confirmedLocation이 있으면 우선, 없으면 store 값 사용
+  const effectiveLocation = confirmedLocation ?? meetingInfo?.location ?? null;
+
 
   const items =
-    memberCount <= 3
+    effectiveLocation != null
+      ? [
+          {
+            place: effectiveLocation,
+            distance: "확정된 모임 장소",
+          },
+        ]
+      : memberCount <= 3
       ? [
           { place: "강남역", distance: "평균 이동시간 23분" },
           { place: "홍대입구역", distance: "평균 28분 소요" },
@@ -155,10 +190,9 @@ function SmartPlaceCard({ groupId, memberCount }: { groupId: string; memberCount
         </div>
       ))}
 
-      <button
-        onClick={() => navigate(`/groups/recommend?groupId=${groupId}`)}
-        className="w-full mt-3 border border-indigo-200 text-indigo-600 rounded-full py-2 text-sm font-medium hover:bg-indigo-50 transition"
-      >
+      <button 
+      onClick={() => navigate(`/groups/${groupId}/recommend`)}
+      className="w-full mt-3 border border-indigo-200 text-indigo-600 rounded-full py-2 text-sm font-medium hover:bg-indigo-50 transition">
         더 많은 장소 보기
       </button>
     </div>
@@ -166,6 +200,17 @@ function SmartPlaceCard({ groupId, memberCount }: { groupId: string; memberCount
 }
 
 function NextStepCard({ groupId }: { groupId: string }) {
+
+  const goRoulette = () => {
+    // 타임룰렛 탭
+    navigate(`/groups/${groupId}/decide?tab=roulette`);
+  };
+
+  const goVote = () => {
+    // 투표 탭
+    navigate(`/groups/${groupId}/decide?tab=vote`);
+  };
+
   const navigate = useNavigate();
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
@@ -174,17 +219,13 @@ function NextStepCard({ groupId }: { groupId: string }) {
         가장 많은 사람이 가능한 시간을 기반으로 다음 단계를 선택하세요.
       </p>
 
-      <button
-        onClick={() => navigate(`/groups/${groupId}/decide`)}
-        className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
-      >
+      <button className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
+      onClick={goRoulette}>
         타임룰렛으로 결정
       </button>
 
-      <button
-        onClick={() => navigate(`/groups/${groupId}/decide`)}
-        className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition"
-      >
+      <button className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition"
+      onClick={goVote}>
         투표로 결정
       </button>
     </div>
