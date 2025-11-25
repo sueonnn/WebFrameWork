@@ -79,8 +79,9 @@ import { StatsSection } from '../components/specific/history/StatsSection';
 import { FilterControls } from '../components/specific/history/FilterControls';
 import { MeetingList } from '../components/specific/history/MeetingList';
 import { compareDates } from '../components/specific/history/dateUtils';
-import { GROUPS, MEETINGS } from '../mock'; 
+import { GROUPS, MEETINGS } from '../mock';
 import { useAuth } from '../contexts/AuthContext';
+import { useHistoryStore } from '../stores/checklist/useHistoryStore';
 import type { Meeting } from '../types/history';
 
 export default function HistoryPage() {
@@ -118,9 +119,10 @@ export default function HistoryPage() {
   );
 
   // 내가 속한 그룹에 속한 미팅만
+  const historyMeetings = useHistoryStore((s) => s.history);
   const allMeetings: Meeting[] = useMemo(
-    () => MEETINGS.filter((m: any) => myGroupIds.includes(m.groupId)),
-    [myGroupIds]
+    () => historyMeetings.filter((m) => myGroupIds.includes(m.groupId)),
+    [historyMeetings, myGroupIds]
   );
 
   // 드롭다운에 표시할 "그룹" 목록 

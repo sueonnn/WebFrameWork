@@ -1,7 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import dayjs from "dayjs";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
 
 import { useGroupScheduleStore } from "../stores/groupScheduleStore";
 import { useUserSettingStore } from "../stores/userScheduleSettingStore";
@@ -23,18 +22,10 @@ export default function GroupTimelinePage() {
   const navigate = useNavigate();
   const { groupId: routeGroupId } = useParams<{ groupId: string }>();
 
-  // 로그인 유저 확인 
-  const { user } = useAuth();
-  const currentUserId = user?.id;
-  if (!currentUserId) {
-    return <div>로그인 정보를 불러오는 중...</div>;
-  }
-
   const [activeTab, setActiveTab] = useState<"this" | "next">("this");
 
   // 전체 사용자 스케줄
-  const allSchedules = useAllUserScheduleStore((s) => s.schedules);
-
+  const { schedules: allSchedules } = useAllUserScheduleStore();
 
   // 그룹 정보 + 스케줄 setter
   const { memberIds, groupName, memberCount, groupSchedules, setGroupSchedules } =
@@ -45,12 +36,9 @@ export default function GroupTimelinePage() {
   // 일단 예시로 첫 번째 그룹(g1)을 기준으로 사용
   const mockGroup = GROUPS[0];
   const currentGroupId = routeGroupId ?? mockGroup.id;
-  const fallbackGroup =
-    GROUPS.find((g) => g.id === currentGroupId) ?? mockGroup;
   const isDefaultGroupName = !groupName || groupName === "우리 팀";
   const headerGroupName = isDefaultGroupName ? mockGroup.name : groupName;
-  const headerMemberCount =
-    memberCount || fallbackGroup.memberIds.length || 1; // 0 나눗셈 방지용 1
+  const headerMemberCount = memberCount || mockGroup.memberIds.length;
 
   const meetingInfo = useMeetingInfoStore((s) =>
     s.getByGroupId(currentGroupId)
@@ -69,13 +57,6 @@ export default function GroupTimelinePage() {
   }, [allSchedules, memberIds]);
 
   // 날짜 계산
-  useEffect(() => {
-    // computeGroupSchedule 시그니처가 (allSchedules, memberIds) 기준이라고 가정
-    const result = computeGroupSchedule(allSchedules, memberIds);
-    setGroupSchedules(result);
-  }, [allSchedules, memberIds, setGroupSchedules]);
-
-   // 날짜 계산
   const startOfWeek = useMemo(() => {
     const base = dayjs().startOf("week").add(1, "day");
     return activeTab === "next" ? base.add(7, "day") : base;
@@ -114,9 +95,7 @@ export default function GroupTimelinePage() {
         <TimelineHeader
           groupName={headerGroupName}
           memberCount={headerMemberCount}
-          onClickSchedule={() =>
-            navigate(`/groups/${currentGroupId}/schedule/${currentUserId}`)
-          }
+          onClickSchedule={() => navigate("/groups/schedule")}
         />
 
         {/* 안내 배너 */}

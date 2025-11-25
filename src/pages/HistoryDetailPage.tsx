@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { MeetingInfo } from "../types/MeetingInfo";
 import { Task } from "../types/Task";
+import { useTaskStore } from "../stores/checklist/useTaskStore";
 
 import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
 
@@ -9,12 +10,11 @@ import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
 import HistoryHeader from "../components/specific/group/history/HistoryHeader";
 import HistoryMeetingCard from "../components/specific/group/history/HistoryMeetingCard";
 import HistoryChecklist from "../components/specific/group/history/HistoryChecklist";
-import HistoryMemo from "../components/specific/group/history/HistoryMemo";
 import HistoryParticipants from "../components/specific/group/history/HistoryParticipants";
 import HistoryTaskByPerson from "../components/specific/group/history/HistoryTaskByPerson";
 import HistoryStats from "../components/specific/group/history/HistoryStats";
 
-const HistoryDetailPage: React.FC= () => {
+const HistoryDetailPage: React.FC = () => {
   const { meetingId } = useParams<{ meetingId?: string }>();
   const navigate = useNavigate();
 
@@ -25,7 +25,7 @@ const HistoryDetailPage: React.FC= () => {
   const safeMeeting: MeetingInfo =
     meeting ?? {
       id: "default-meeting",
-      groupId : "m1",
+      groupId: "m1",
       title: "알 수 없는 모임",
       date: "",
       time: "",
@@ -36,8 +36,9 @@ const HistoryDetailPage: React.FC= () => {
 
   const participants = safeMeeting.participants;
 
-  const initialTasks: Task[] = TASKS_BY_MEETING[targetId] ?? [];
-  const [tasks, setTasks] = useState<Task[]>(initialTasks);
+  const tasks = useTaskStore((s) => s.tasksByMeeting[targetId] ?? []);
+  const storeUpdateTask = useTaskStore((s) => s.updateTask);
+  const storeDeleteTask = useTaskStore((s) => s.deleteTask);
 
   const doneCount = tasks.filter((t) => t.done).length;
   const totalCount = tasks.length;
@@ -64,13 +65,16 @@ const HistoryDetailPage: React.FC= () => {
           <div className="col-span-2 space-y-10">
             <HistoryChecklist
               tasks={tasks}
-              setTasks={setTasks}
+              updateTask={storeUpdateTask}
+              deleteTask={storeDeleteTask}
               participants={participants}
+              meetingId={targetId}
             />
 
-            <HistoryMemo />
-
-            <button className="px-6 py-3 bg-[#6D75FF] hover:bg-[#5a60ff] text-white rounded-xl shadow-md font-medium">
+            <button
+              onClick={() => navigate(`/groups/checklist/${meetingId}`)}
+              className="px-6 py-3 bg-[#6D75FF] hover:bg-[#5a60ff] text-white rounded-xl shadow-md font-medium"
+            >
               체크리스트 바로가기
             </button>
           </div>
