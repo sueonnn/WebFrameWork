@@ -4,13 +4,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { Task } from "../types/Task";
 import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
 import type { MeetingInfo } from "../types/MeetingInfo";
+import type { Meeting } from "../types/history";
 
+import { useMeetingInfoStore } from "../stores/meetingInfoStore";
 import { useAuth } from "../contexts/AuthContext";
 import { useTaskStore } from "../stores/checklist/useTaskStore";
 import { useHistoryStore } from "../stores/checklist/useHistoryStore";
-import type { Meeting } from "../types/history";
 
-// UI Components
+// 분리한 컴포넌트들
 import ChecklistHeader from "../components/specific/checklist/ChecklistHeader";
 import ChecklistMeetingCard from "../components/specific/checklist/ChecklistMeetingCard";
 import ChecklistAddTask from "../components/specific/checklist/ChecklistAddTask";
@@ -23,8 +24,8 @@ const CheckListPage: React.FC = () => {
   const { meetingId } = useParams<{ meetingId?: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-
   const userName = user?.name ?? "이름 없음";
+
   const { updateOrAddHistory } = useHistoryStore();
 
   if (!meetingId) {
@@ -35,10 +36,13 @@ const CheckListPage: React.FC = () => {
     );
   }
 
-  // meeting 정보
-  const meeting: MeetingInfo | undefined = MEETING_INFOS.find(
-    (m) => m.id === meetingId
+  // ===== meeting 정보: store 우선, 없으면 mock =====
+  const meetingFromStore = useMeetingInfoStore((s) =>
+    s.getByMeetingId(meetingId)
   );
+
+  const meeting: MeetingInfo | undefined =
+    meetingFromStore ?? MEETING_INFOS.find((m) => m.id === meetingId);
 
   if (!meeting) {
     return (
@@ -50,7 +54,7 @@ const CheckListPage: React.FC = () => {
 
   const members = meeting.participants;
 
-  // Zustand Task Store
+  // ===== Task Zustand Store =====
   const {
     tasksByMeeting,
     addTask: storeAddTask,
@@ -66,7 +70,7 @@ const CheckListPage: React.FC = () => {
     }
   }, [meetingId, tasksByMeeting, setTasks]);
 
-  const tasks = tasksByMeeting[meetingId] ?? [];
+  const tasks: Task[] = tasksByMeeting[meetingId] ?? [];
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [newTaskText, setNewTaskText] = useState("");
@@ -76,11 +80,13 @@ const CheckListPage: React.FC = () => {
   const progress =
     totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
 
+  // ===== 액션들 =====
+
   // 체크박스 토글
   const toggleTaskDone = (id: string) => {
-    updateTask(meetingId, id, {
-      done: !tasks.find((t) => t.id === id)?.done,
-    });
+    const target = tasks.find((t) => t.id === id);
+    if (!target) return;
+    updateTask(meetingId, id, { done: !target.done });
   };
 
   // 담당자 변경
@@ -88,7 +94,7 @@ const CheckListPage: React.FC = () => {
     updateTask(meetingId, id, { assignee: name });
   };
 
-  // 신규 할 일 추가
+  // 신규 할 일 추가 (@이름 파싱 포함)
   const addTask = () => {
     if (!newTaskText.trim()) return;
 
@@ -144,7 +150,7 @@ const CheckListPage: React.FC = () => {
     return stats;
   }, [tasks, members]);
 
-  // 히스토리 저장
+  // ===== 히스토리 저장(onSave) =====
   const handleSaveHistory = () => {
     const progressStr = `${progress}% 완료`;
 
@@ -208,10 +214,7 @@ const CheckListPage: React.FC = () => {
           {/* RIGHT */}
           <div className="col-span-1 flex flex-col gap-8 self-start">
             <ChecklistParticipants members={members} />
-            <ChecklistStatsByMember
-              members={members}
-              memberStats={memberStats}
-            />
+            <ChecklistStatsByMember members={members} memberStats={memberStats} />
             <ChecklistFinalCTA onSave={handleSaveHistory} />
           </div>
         </div>

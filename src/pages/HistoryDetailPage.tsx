@@ -7,7 +7,7 @@ import { Task } from "../types/Task";
 import HistoryHeader from "../components/specific/group/history/HistoryHeader";
 import HistoryMeetingCard from "../components/specific/group/history/HistoryMeetingCard";
 import HistoryChecklist from "../components/specific/group/history/HistoryChecklist";
-import HistoryMemo from "../components/specific/group/history/HistoryMemo";
+//import HistoryMemo from "../components/specific/group/history/HistoryMemo";
 import HistoryParticipants from "../components/specific/group/history/HistoryParticipants";
 import HistoryTaskByPerson from "../components/specific/group/history/HistoryTaskByPerson";
 import HistoryStats from "../components/specific/group/history/HistoryStats";
@@ -26,7 +26,6 @@ const HistoryDetailPage: React.FC = () => {
 
   const meeting = MEETING_INFOS.find((m) => m.id === meetingId);
 
-<<<<<<< HEAD
   if (!meeting) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-500">
@@ -36,21 +35,6 @@ const HistoryDetailPage: React.FC = () => {
   }
 
   const participants = meeting.participants;
-=======
-  const safeMeeting: MeetingInfo =
-    meeting ?? {
-      id: "default-meeting",
-      groupId : "m1",
-      title: "알 수 없는 모임",
-      date: "",
-      time: "",
-      location: "",
-      participants: [],
-    };
-
-
-  const participants = safeMeeting.participants;
->>>>>>> 24e5f22d5a5486299272f347a15ca3cb7eea715b
 
   // Zustand Store
   const { tasksByMeeting, setTasks } = useTaskStore();

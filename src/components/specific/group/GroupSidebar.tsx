@@ -1,37 +1,27 @@
 import React, { useMemo } from "react";
-import { useGroupScheduleStore } from "../../../stores/groupScheduleStore";
 import { useNavigate } from "react-router-dom";
 import { useMeetingInfoStore } from "../../../stores/meetingInfoStore";
 
-type MergedSchedule = {
-  this: Record<string, number>;
-  next: Record<string, number>;
-};
-
 type GroupSidebarProps = {
   groupId: string;
-  /** 페이지에서 미리 머지한 스케줄을 넘기고 싶을 때 (옵션) */
-  merged?: MergedSchedule;
-  /** 멤버 수를 직접 넘기고 싶을 때 (옵션, 없으면 store 값 사용) */
-  memberCount?: number;
-  /** 확정된 장소를 부모에서 넘길 때 (옵션, 없으면 store에서 조회) */
-  confirmedLocation?: string;
+  merged: {
+    this: Record<string, number>;
+    next: Record<string, number>;
+  };
+  memberCount: number;
+  confirmedLocation: string; // ⭐ 추가
 };
 
-export default function GroupSidebar({ groupId, merged, memberCount,confirmedLocation, }: GroupSidebarProps) {
-   // store 기반 그룹 스케줄 / 멤버 수
-  const { groupSchedules: storeSchedules, memberCount: storeMemberCount } =
-    useGroupScheduleStore();
+export default function GroupSidebar({
+  groupId,
+  merged,
+  memberCount,
+  confirmedLocation,
+}: GroupSidebarProps) {
+  const activeWeek = "this";
+  const weekData = merged[activeWeek] || {};
 
-  const activeWeek: keyof MergedSchedule = "this";
-
-   // 👉 weekData는 우선순위: props.merged > store.groupSchedules
-  const weekData: Record<string, number> =
-    merged?.[activeWeek] || storeSchedules[activeWeek] || {};
-
-  // 👉 멤버 수도 props > store 순으로 사용
-  const effectiveMemberCount = memberCount ?? storeMemberCount ?? 1; // 0으로 나눔 방지
-
+  /** TOP3 */
   const top3 = useMemo(() => {
     const entries = Object.entries(weekData);
     if (entries.length === 0) return [];
@@ -46,12 +36,13 @@ export default function GroupSidebar({ groupId, merged, memberCount,confirmedLoc
         return {
           rank: idx + 1,
           time: `${weekdays[day]}요일 ${hour}:00 - ${hour + 1}:00`,
-          percent: Math.round((count / effectiveMemberCount) * 100),
-          members: `${count}/${effectiveMemberCount}명 가능`,
+          percent: Math.round((count / memberCount) * 100),
+          members: `${count}/${memberCount}명 가능`,
         };
       });
-  }, [weekData, effectiveMemberCount]);
+  }, [weekData, memberCount]);
 
+  /** 황금시간 */
   const golden = useMemo(() => {
     const entries = Object.entries(weekData);
     if (entries.length === 0) return null;
@@ -63,23 +54,26 @@ export default function GroupSidebar({ groupId, merged, memberCount,confirmedLoc
     return {
       time: `${weekdays[day]}요일 ${hour}:00~${hour + 1}:00`,
       count: bestCount,
-      percent: Math.round((bestCount / effectiveMemberCount) * 100),
+      percent: Math.round((bestCount / memberCount) * 100),
     };
-  }, [weekData, effectiveMemberCount]);
+  }, [weekData, memberCount]);
 
   return (
     <aside className="w-[320px] flex flex-col gap-6">
       <Top3Card data={top3} />
       <GoldenTimeCard golden={golden} />
+
       <SmartPlaceCard
         groupId={groupId}
-        memberCount={effectiveMemberCount}
-        confirmedLocation={confirmedLocation}
+        memberCount={memberCount}
       />
+
       <NextStepCard groupId={groupId} />
     </aside>
   );
 }
+
+/* ---- Top3Card -------------------------------------------------- */
 
 function Top3Card({ data }: { data: any[] }) {
   if (!data || data.length === 0) {
@@ -101,8 +95,14 @@ function Top3Card({ data }: { data: any[] }) {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full 
-                  ${item.rank === 1 ? "bg-amber-400" : item.rank === 2 ? "bg-gray-400" : "bg-orange-400"}
+              <span
+                className={`inline-flex h-7 w-7 items-center justify-center rounded-full 
+                ${item.rank === 1
+                    ? "bg-amber-400"
+                    : item.rank === 2
+                      ? "bg-gray-400"
+                      : "bg-orange-400"
+                  }
                 text-white text-sm font-extrabold`}
               >
                 {item.rank}
@@ -130,6 +130,8 @@ function Top3Card({ data }: { data: any[] }) {
   );
 }
 
+/* ---- GoldenTimeCard -------------------------------------------- */
+
 function GoldenTimeCard({ golden }: { golden: any | null }) {
   if (!golden) {
     return (
@@ -152,20 +154,22 @@ function GoldenTimeCard({ golden }: { golden: any | null }) {
   );
 }
 
-function SmartPlaceCard({ groupId, memberCount, confirmedLocation }: { groupId: string, memberCount: number; confirmedLocation?: string; }) {
+function SmartPlaceCard({
+  groupId,
+  memberCount
+}: {
+  groupId: string;
+  memberCount: number;
+}) {
   const navigate = useNavigate();
-  const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(groupId));
-
-
-  // prop으로 온 confirmedLocation이 있으면 우선, 없으면 store 값 사용
-  const effectiveLocation = confirmedLocation ?? meetingInfo?.location ?? null;
-
+ const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(groupId));
+ const confirmedLocation = meetingInfo?.location;        
 
   const items =
-    effectiveLocation != null
+    confirmedLocation 
       ? [
           {
-            place: effectiveLocation,
+            place: confirmedLocation,
             distance: "확정된 모임 장소",
           },
         ]
@@ -220,12 +224,12 @@ function NextStepCard({ groupId }: { groupId: string }) {
       </p>
 
       <button className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
-      onClick={goRoulette}>
+        onClick={goRoulette}>
         타임룰렛으로 결정
       </button>
 
       <button className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition"
-      onClick={goVote}>
+        onClick={goVote}>
         투표로 결정
       </button>
     </div>

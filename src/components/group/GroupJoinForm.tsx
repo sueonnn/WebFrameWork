@@ -4,7 +4,6 @@ import { UsersIcon } from '../icons';
 import { GROUPS } from "../../mock"; 
 
 export default function GroupJoinForm() {
-  const [joinedGroupId, setJoinedGroupId] = useState<string | null>(null);
   const [code, setCode] = useState("");
   const [modalMessage, setModalMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -41,7 +40,6 @@ export default function GroupJoinForm() {
     // 참여 성공 연출
     console.log("참여 코드:", trimmed, "=> 그룹:", group);
 
-    setJoinedGroupId(group.id); 
     setModalMessage(`"${group.name}" 그룹에 참여했어요!`);
     setCanGoSchedule(true);  
     setShowModal(true);
@@ -51,16 +49,10 @@ export default function GroupJoinForm() {
 
    const handleModalClose = () => {
     setShowModal(false);
-<<<<<<< HEAD
-    if (canGoSchedule) {
-      navigate(`/groups/${joinedGroupId}/timeline`);
-      setCanGoSchedule(false);      
-=======
     if (canGoSchedule && joinedGroupId)  {
       navigate(`/groups/${joinedGroupId}/timeline`);
       setCanGoSchedule(false);    
       setJoinedGroupId(null);  
->>>>>>> 24e5f22d5a5486299272f347a15ca3cb7eea715b
     }
   };
 

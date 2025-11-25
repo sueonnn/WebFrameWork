@@ -6,17 +6,16 @@ import type { MySchedule } from "../schedule";
  * 그룹 히트맵 스케줄을 계산하는 함수.
  *
  * @param memberSchedules - { userId: MySchedule } 형태로 저장된 전체 사용자 스케줄
+ * @param memberIds       - 이 그룹에 포함된 사용자 ID 배열
  * @returns {
  *   this: { "2-14": 2, ... },
  *   next: { "3-15": 1, ... }
  * }
  */
 export function computeGroupSchedule(
-  memberSchedules: Record<string, MySchedule>
+  memberSchedules: Record<string, MySchedule>,
+  memberIds: string[]
 ) {
-  // 스케줄이 있는 멤버 ID 자동 추출
-  const memberIds = Object.keys(memberSchedules);
-
   const result = {
     this: {} as Record<string, number>,
     next: {} as Record<string, number>,
@@ -24,7 +23,7 @@ export function computeGroupSchedule(
 
   memberIds.forEach((uid) => {
     const schedule = memberSchedules[uid];
-    if (!schedule) return;
+    if (!schedule) return; // 스케줄 없는 사람은 스킵
 
     (["this", "next"] as const).forEach((week) => {
       schedule[week].forEach((cellKey) => {

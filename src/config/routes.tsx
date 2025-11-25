@@ -60,6 +60,23 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/groups/:groupId/recommend",
+        element: (
+          <RequireAuth>
+            <GroupPlaceRecommendPage />
+          </RequireAuth>
+        ),
+      },
+      { path: "/stations/cafes", element: <StationCafePage /> },
+      {
+        path: "/groups/checklist/:meetingId",
+        element: (
+          <RequireAuth>
+            <CheckListPage />
+          </RequireAuth>
+        ),
+      },
+      {
         path: "/groups/checklist/:meetingId",
         element: (
           <RequireAuth>
