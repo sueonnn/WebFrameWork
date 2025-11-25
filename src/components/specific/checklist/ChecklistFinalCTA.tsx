@@ -1,4 +1,8 @@
-export default function ChecklistFinalCTA() {
+interface Props {
+  onSave: () => void; 
+}
+
+export default function ChecklistFinalCTA({ onSave }: Props) {
   return (
     <section className="bg-[#F2EEFF] rounded-2xl border border-[#CFC8FF] p-6 shadow-sm">
       <h3 className="text-sm font-bold text-[#4A3FE3] mb-2">모임 최종 확정</h3>
@@ -6,7 +10,11 @@ export default function ChecklistFinalCTA() {
         체크리스트와 함께 모임을 히스토리에 저장하고 추억을 남겨보세요.
       </p>
 
-      <button className="w-full bg-gradient-to-r from-[#6D74FF] to-[#9587FF] text-white py-2.5 rounded-xl text-sm font-semibold shadow">
+      <button
+        onClick={onSave} 
+        className="w-full bg-gradient-to-r from-[#6D74FF] to-[#9587FF] 
+                   text-white py-2.5 rounded-xl text-sm font-semibold shadow"
+      >
         🗂 히스토리에 저장하기
       </button>
 
