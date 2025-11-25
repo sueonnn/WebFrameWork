@@ -1,24 +1,23 @@
-// src/components/specific/group/GroupSidebar.tsx
 import React, { useMemo } from "react";
-import { useGroupScheduleStore } from "../../../stores/groupScheduleStore";
 import { useNavigate } from "react-router-dom";
-
 
 type GroupSidebarProps = {
   groupId: string;
+  merged: {
+    this: Record<string, number>;
+    next: Record<string, number>;
+  };
+  memberCount: number;
 };
 
-export default function GroupSidebar({ groupId }: GroupSidebarProps) {
-  const { groupSchedules, memberCount } = useGroupScheduleStore();
-
-  const activeWeek = "this"; // 필요 시 부모 페이지에서 prop으로 받을 수도 있음
-  const weekData = groupSchedules[activeWeek] || {};
+export default function GroupSidebar({ groupId, merged, memberCount }: GroupSidebarProps) {
+  const activeWeek = "this";
+  const weekData = merged[activeWeek] || {};
 
   const top3 = useMemo(() => {
-    const entries = Object.entries(weekData); // [ ["2-14", 3], ... ]
+    const entries = Object.entries(weekData);
     if (entries.length === 0) return [];
 
-    // value(가능 인원수) 기준 내림차순 + 3개 슬라이싱
     return entries
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
@@ -31,7 +30,6 @@ export default function GroupSidebar({ groupId }: GroupSidebarProps) {
           time: `${weekdays[day]}요일 ${hour}:00 - ${hour + 1}:00`,
           percent: Math.round((count / memberCount) * 100),
           members: `${count}/${memberCount}명 가능`,
-          trust: count === memberCount ? "신뢰도 높음" : "신뢰도 보통",
         };
       });
   }, [weekData, memberCount]);
@@ -55,7 +53,7 @@ export default function GroupSidebar({ groupId }: GroupSidebarProps) {
     <aside className="w-[320px] flex flex-col gap-6">
       <Top3Card data={top3} />
       <GoldenTimeCard golden={golden} />
-      <SmartPlaceCard groupId={groupId} />
+      <SmartPlaceCard groupId={groupId} memberCount={memberCount} />
       <NextStepCard groupId={groupId} />
     </aside>
   );
@@ -132,9 +130,8 @@ function GoldenTimeCard({ golden }: { golden: any | null }) {
   );
 }
 
-function SmartPlaceCard({ groupId }: { groupId: string }) {
-  const { memberCount } = useGroupScheduleStore();
-  const navigate = useNavigate();              
+function SmartPlaceCard({ groupId, memberCount }: { groupId: string; memberCount: number }) {
+  const navigate = useNavigate();
 
   const items =
     memberCount <= 3
@@ -158,9 +155,10 @@ function SmartPlaceCard({ groupId }: { groupId: string }) {
         </div>
       ))}
 
-      <button 
-      onClick={() => navigate(`/groups/recommend?groupId=${groupId}`)}
-      className="w-full mt-3 border border-indigo-200 text-indigo-600 rounded-full py-2 text-sm font-medium hover:bg-indigo-50 transition">
+      <button
+        onClick={() => navigate(`/groups/recommend?groupId=${groupId}`)}
+        className="w-full mt-3 border border-indigo-200 text-indigo-600 rounded-full py-2 text-sm font-medium hover:bg-indigo-50 transition"
+      >
         더 많은 장소 보기
       </button>
     </div>
@@ -168,16 +166,6 @@ function SmartPlaceCard({ groupId }: { groupId: string }) {
 }
 
 function NextStepCard({ groupId }: { groupId: string }) {
-
-   const goRoulette = () => {
-    // 기본: 타임룰렛 탭
-    navigate(`/groups/${groupId}/decide`);
-  };
-
-  const goVote = () => {
-    navigate(`/groups/${groupId}/decide`);
-  };
-
   const navigate = useNavigate();
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
@@ -186,13 +174,17 @@ function NextStepCard({ groupId }: { groupId: string }) {
         가장 많은 사람이 가능한 시간을 기반으로 다음 단계를 선택하세요.
       </p>
 
-      <button className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
-      onClick={goRoulette}>
+      <button
+        onClick={() => navigate(`/groups/${groupId}/decide`)}
+        className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
+      >
         타임룰렛으로 결정
       </button>
 
-      <button className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition"
-      onClick={goVote}>
+      <button
+        onClick={() => navigate(`/groups/${groupId}/decide`)}
+        className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition"
+      >
         투표로 결정
       </button>
     </div>

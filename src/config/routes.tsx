@@ -44,7 +44,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/groups/schedule",
+        path: "/groups/:groupId/schedule/:memberId",
         element: (
           <RequireAuth>
             <SchedulePage />
@@ -52,7 +52,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/groups/timeline",
+        path: "/groups/:groupId/timeline",
         element: (
           <RequireAuth>
             <GroupTimelinePage />

@@ -14,7 +14,7 @@ export default function LocationTypeSelector({ value, onChange }: Props) {
     { key: "home", label: "집", icon: <HomeIcon /> },
     { key: "company", label: "회사", icon: <BuildingIcon /> },
     { key: "school", label: "학교", icon: <SchoolIcon /> },
-    { key: "etc", label: "기타", icon: <LocationIconMono /> }, // ← 모노톤 버전만 사용!
+    { key: "etc", label: "기타", icon: <LocationIconMono /> }, 
   ] as const;
 
   return (

@@ -1,16 +1,29 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import LocationModal from "./LocationModal";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocationStore } from "../../../stores/useLocationStore";
+import { useAllUserScheduleStore } from "../../../stores/allUserScheduleStore";
+import { useMemo } from "react";
 
 type Props = {
   totalHours: number;
   groupId: string;
 };
 
-
 export default function ScheduleSidebar({ totalHours, groupId }: Props) {
+  const { memberId } = useParams();
   const [openLocationModal, setOpenLocationModal] = useState(false);
+
+  const { locations, setLocation } = useLocationStore();
+  const savedLocation = locations[groupId]?.[memberId!] ?? null;
+
   const [address, setAddress] = useState("");
+
+  useEffect(() => {
+    if (savedLocation) {
+      setAddress(savedLocation.address);
+    }
+  }, [savedLocation]);
 
   return (
     <aside className="w-[320px] flex flex-col gap-6">
@@ -18,25 +31,28 @@ export default function ScheduleSidebar({ totalHours, groupId }: Props) {
         onOpen={() => setOpenLocationModal(true)}
         address={address}
       />
-      <MySummaryCard totalHours={totalHours} />
-      <OverlapTopCard />
 
-      {/* 위치 설정 팝업 */}
+      <MySummaryCard totalHours={totalHours} />
+      <OverlapTopCard groupId={groupId} />
+
       <LocationModal
         isOpen={openLocationModal}
         onClose={() => setOpenLocationModal(false)}
-        onSelectAddress={(addr) => setAddress(addr)}
-      />
+        onSelectAddress={(addr) => {
 
+          setLocation(groupId, memberId!, {
+            type: "home",
+            address: addr,
+          });
+
+          setAddress(addr);
+        }}
+      />
     </aside>
   );
 }
 
-
-/** ===== 내부 카드들 (과분리 방지: 한 파일에 캡슐화) ===== */
-
 function LocationCard({ onOpen, address }: { onOpen: () => void; address: string }) {
-
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -74,7 +90,6 @@ function LocationCard({ onOpen, address }: { onOpen: () => void; address: string
   );
 }
 
-
 function MySummaryCard({ totalHours }: { totalHours: number }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
@@ -87,16 +102,49 @@ function MySummaryCard({ totalHours }: { totalHours: number }) {
   );
 }
 
-function OverlapTopCard() {
-  const items = [
-    { time: "목 19:00-20:00", members: "5/6명" },
-    { time: "금 18:00-19:00", members: "4/6명" },
-    { time: "토 14:00-15:00", members: "4/6명" },
-  ];
+function OverlapTopCard({ groupId }: { groupId: string }) {
+  const schedules = useAllUserScheduleStore((s) => s.schedules);
+  const all = schedules[groupId] || {};
+  const memberCount = Object.keys(all).length;
+
+  const merged = useMemo(() => {
+    const result: Record<string, number> = {};
+
+    Object.values(all).forEach((user: any) => {
+      user.this.forEach((key: string) => {
+        result[key] = (result[key] || 0) + 1;
+      });
+    });
+
+    return result;
+  }, [all]);
+
+  const items = useMemo(() => {
+    const entries = Object.entries(merged);
+    if (entries.length === 0) return [];
+
+    const weekdays = ["월", "화", "수", "목", "금", "토", "일"];
+
+    return entries
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3)
+      .map(([key, count]) => {
+        const [day, hour] = key.split("-").map(Number);
+        return {
+          time: `${weekdays[day]} ${hour}:00-${hour + 1}:00`,
+          members: `${count}/${memberCount}명`,
+        };
+      });
+  }, [merged, memberCount]);
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
       <h3 className="mb-4 text-base font-semibold text-gray-900">겹침 상위 시간대</h3>
+
+      {items.length === 0 && (
+        <p className="text-sm text-gray-500">스케줄 데이터를 입력하면 상위 시간대가 보여요.</p>
+      )}
+
       {items.map((t) => (
         <div
           key={t.time}
@@ -114,4 +162,3 @@ function OverlapTopCard() {
     </div>
   );
 }
-

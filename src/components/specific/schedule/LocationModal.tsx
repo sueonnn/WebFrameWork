@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import LocationTypeSelector from "./LocationTypeSelector";
-import CurrentLocationIcon from "../../../components/icons/CurrentLocationIcon";
 import { searchPlaces } from "../../../apis/kakao";
 
 type LocationType = "home" | "company" | "school" | "etc";
@@ -12,16 +11,18 @@ type Props = {
 };
 
 export default function LocationModal({ isOpen, onClose, onSelectAddress }: Props) {
-  if (!isOpen) return null;
 
   const [type, setType] = useState<LocationType>("home");
-
   const [addr, setAddr] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSelecting, setIsSelecting] = useState(false);
 
+  const visibleStyle = isOpen ? "flex" : "hidden";
+
   useEffect(() => {
+    if (!isOpen) return;
+
     const timer = setTimeout(async () => {
       if (isSelecting) return;
 
@@ -36,7 +37,7 @@ export default function LocationModal({ isOpen, onClose, onSelectAddress }: Prop
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [addr]);
+  }, [addr, isSelecting, isOpen]);
 
   const handleSelectPlace = (place: any) => {
     setIsSelecting(true);
@@ -60,9 +61,9 @@ export default function LocationModal({ isOpen, onClose, onSelectAddress }: Prop
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40">
+    <div className={`fixed inset-0 z-[200] items-center justify-center bg-black/40 ${visibleStyle}`}>
       <div className="w-[520px] rounded-2xl bg-white shadow-xl p-8 relative">
-       
+
         <button
           onClick={onClose}
           className="absolute right-5 top-5 text-gray-400 hover:text-gray-600"
@@ -87,7 +88,7 @@ export default function LocationModal({ isOpen, onClose, onSelectAddress }: Prop
             className="w-full rounded-xl border border-gray-300 px-4 py-3 text-sm outline-none focus:border-indigo-500"
           />
 
-          {showDropdown && results.length > 0 && (
+          {isOpen && showDropdown && results.length > 0 && (
             <ul className="absolute z-10 mt-1 max-h-56 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-lg">
               {results.map((place) => (
                 <li
@@ -101,14 +102,6 @@ export default function LocationModal({ isOpen, onClose, onSelectAddress }: Prop
             </ul>
           )}
         </div>
-
-        <button
-          className="w-full h-12 mb-6 rounded-lg border text-indigo-600 font-medium flex items-center justify-center gap-2"
-        >
-          <CurrentLocationIcon />
-          현재 위치 사용하기
-          {/*  이 버전은 실제 기능 없음! 단순 버튼 */}
-        </button>
 
         <div className="flex gap-3">
           <button
