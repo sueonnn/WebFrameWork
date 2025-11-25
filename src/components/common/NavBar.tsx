@@ -10,7 +10,7 @@ const NavBar: React.FC = () => {
   const menuItems = [
     { name: "홈", path: "/" },
     { name: "히스토리", path: "/history" },
-    { name: "그룹 참여하기", path: "/groups" },
+    { name: "그룹 참여하기", path: "/groups/new?tab=join" },
   ];
 
   const logoName = "언제봐";

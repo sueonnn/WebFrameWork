@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import LocationTypeSelector from "./LocationTypeSelector";
-import CurrentLocationIcon from "../../../components/icons/CurrentLocationIcon";
 import { searchPlaces } from "../../../apis/kakao";
 
 type LocationType = "home" | "company" | "school" | "etc";
@@ -12,10 +11,7 @@ type Props = {
 };
 
 export default function LocationModal({ isOpen, onClose, onSelectAddress }: Props) {
-  if (!isOpen) return null;
-
   const [type, setType] = useState<LocationType>("home");
-
   const [addr, setAddr] = useState("");
   const [results, setResults] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -36,18 +32,15 @@ export default function LocationModal({ isOpen, onClose, onSelectAddress }: Prop
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [addr]);
+  }, [addr, isSelecting]);
 
   const handleSelectPlace = (place: any) => {
     setIsSelecting(true);
-
     setAddr(place.place_name);
     setResults([]);
     setShowDropdown(false);
 
-    setTimeout(() => {
-      setIsSelecting(false);
-    }, 300);
+    setTimeout(() => setIsSelecting(false), 300);
   };
 
   const handleSave = () => {
@@ -59,10 +52,11 @@ export default function LocationModal({ isOpen, onClose, onSelectAddress }: Prop
     onClose();
   };
 
+  if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40">
       <div className="w-[520px] rounded-2xl bg-white shadow-xl p-8 relative">
-       
         <button
           onClick={onClose}
           className="absolute right-5 top-5 text-gray-400 hover:text-gray-600"
@@ -101,14 +95,6 @@ export default function LocationModal({ isOpen, onClose, onSelectAddress }: Prop
             </ul>
           )}
         </div>
-
-        <button
-          className="w-full h-12 mb-6 rounded-lg border text-indigo-600 font-medium flex items-center justify-center gap-2"
-        >
-          <CurrentLocationIcon />
-          현재 위치 사용하기
-          {/*  이 버전은 실제 기능 없음! 단순 버튼 */}
-        </button>
 
         <div className="flex gap-3">
           <button

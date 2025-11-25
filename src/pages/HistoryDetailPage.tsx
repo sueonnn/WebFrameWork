@@ -1,10 +1,9 @@
-import React, { useState } from "react";
+import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { MeetingInfo } from "../types/MeetingInfo";
-import { Task } from "../types/Task";
+import type { MeetingInfo } from "../types/MeetingInfo";
 import { useTaskStore } from "../stores/checklist/useTaskStore";
-
-import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
+import { useMeetingInfoStore } from "../stores/meetingInfoStore";
+import { MEETING_INFOS } from "../mock";
 
 // 분리한 컴포넌트들
 import HistoryHeader from "../components/specific/group/history/HistoryHeader";
@@ -20,18 +19,22 @@ const HistoryDetailPage: React.FC = () => {
 
   const targetId = meetingId ?? "m1";
 
-  const meeting = MEETING_INFOS.find((m) => m.id === targetId);
+  // store에서 먼저 가져오기 (룰렛/장소선정에서 업데이트한 값이 여기에 있음)
+  const storeMeeting = useMeetingInfoStore((s) => s.getByMeetingId(targetId));
 
-  const safeMeeting: MeetingInfo =
-    meeting ?? {
-      id: "default-meeting",
-      groupId: "m1",
-      title: "알 수 없는 모임",
-      date: "",
-      time: "",
-      location: "",
-      participants: [],
-    };
+  // mock은 fallback
+  const mockMeeting = MEETING_INFOS.find((m) => m.id === targetId);
+
+  // mock + store를 merge (store에 time/location만 있어도 덮어쓰기됨)
+  const safeMeeting: MeetingInfo = {
+    id: targetId,
+    groupId: mockMeeting?.groupId ?? storeMeeting?.groupId ?? "g1",
+    title: mockMeeting?.title ?? storeMeeting?.title ?? "알 수 없는 모임",
+    date: mockMeeting?.date ?? storeMeeting?.date ?? "",
+    time: storeMeeting?.time ?? mockMeeting?.time ?? "",
+    location: storeMeeting?.location ?? mockMeeting?.location ?? "",
+    participants: storeMeeting?.participants ?? mockMeeting?.participants ?? [],
+  };
 
 
   const participants = safeMeeting.participants;

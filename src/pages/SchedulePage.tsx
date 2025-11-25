@@ -1,11 +1,10 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 import TimeGrid from "../components/specific/schedule/TimeGrid";
 import ScheduleSidebar from "../components/specific/schedule/ScheduleSidebar";
-
 import ScheduleTabs from "../components/specific/schedule/ScheduleTabs";
-import ScheduleToggles from "../components/specific/schedule/ScheduleToggles";
 import ScheduleHintBanner from "../components/specific/schedule/ScheduleHintBanner";
 import ScheduleActionButtons from "../components/specific/schedule/ScheduleActionButtons";
 import BackArrow from "../components/icons/BackArrow";
@@ -18,6 +17,10 @@ import type { WeekType } from "../types/schedule";
 
 export default function SchedulePage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { groupId, userId } = useParams<{ groupId: string; userId: string }>();
+  const { user } = useAuth();
+
   const [activeTab, setActiveTab] = useState<WeekType>("this");
 
   /** 개인 스케줄 (UI + temp 포함) */
@@ -36,19 +39,34 @@ export default function SchedulePage() {
 
   const totalHours = schedules?.[activeTab]?.size ?? 0;
 
-  // Mock 데이터 임시 고정
-  const currentGroupId = "g1";
+  const currentGroupId = groupId ?? "g1";
+  const currentUserId = userId ?? (user as any)?.id ?? "user1";
+
+  const backTo =
+    (location.state as any)?.from ?? `/groups/${currentGroupId}/timeline`;
+
+  // allUserScheduleStore로 동기화 함수
+  const syncToAll = useCallback(() => {
+    const latest = useMyScheduleStore.getState().schedules;
+    setUserSchedule(currentUserId, {
+      this: new Set(latest.this),
+      next: new Set(latest.next),
+    });
+  }, [currentUserId, setUserSchedule]);
+
+  // autoSave=true면, 스케줄이 바뀔 때마다 자동으로 allSchedules에 반영
+  useEffect(() => {
+    if (!autoSave) return;
+    syncToAll();
+  }, [autoSave, schedules, syncToAll]);
 
   const handleClear = () => {
     if (autoSave) {
       setSchedules((prev) => {
-        const next = {
-          this: new Set(prev.this),
-          next: new Set(prev.next),
-        };
-        next[activeTab] = new Set(); 
+        const next = { this: new Set(prev.this), next: new Set(prev.next) };
+        next[activeTab] = new Set();
 
-        setUserSchedule("user1", {
+        setUserSchedule(currentUserId, {
           this: new Set(next.this),
           next: new Set(next.next),
         });
@@ -63,11 +81,38 @@ export default function SchedulePage() {
 
   
   const handleSave = () => {
-    if (autoSave) return; 
+    if (autoSave) return;
 
     window.dispatchEvent(
-      new CustomEvent("commit-temp-cells", { detail: { week: activeTab } })
+      new CustomEvent("commit-temp-cells", {
+        detail: { week: activeTab, weekType: activeTab },
+      })
     );
+
+    // commit 후 allSchedules에 반영
+    setTimeout(() => {
+      syncToAll();
+    }, 0);
+  };
+
+  // 뒤로가기에서도 (autosave=false면) 커밋 + 동기화 하고 이동
+  const handleBack = () => {
+    if (!autoSave) {
+      window.dispatchEvent(
+        new CustomEvent("commit-temp-cells", {
+          detail: { week: activeTab, weekType: activeTab },
+        })
+      );
+      setTimeout(() => {
+        syncToAll();
+        navigate(backTo);
+      }, 0);
+      return;
+    }
+
+    // autoSave=true도 마지막 동기화 한번 더 안전하게
+    syncToAll();
+    navigate(backTo);
   };
 
 
@@ -79,23 +124,14 @@ export default function SchedulePage() {
         <div className="rounded-2xl bg-white p-10 shadow-sm border border-gray-200 relative">
 
           
-          <div className="mb-4 border-b border-gray-200 pb-3 text-sm font-medium text-gray-700">
+          <div className="relative z-20 mb-4 border-b border-gray-200 pb-3 text-sm font-medium text-gray-700">
 
             <div className="flex items-center justify-between mb-3">
 
               <button
-                onClick={() => navigate("/groups/timeline")}
-                className="
-                flex items-center gap-1 
-                px-4 py-2 
-                text-sm font-semibold 
-                text-indigo-600 
-                hover:text-indigo-700
-                border border-indigo-200
-                rounded-full 
-                bg-white
-                hover:bg-indigo-50/50
-                transition">
+                onClick={handleBack}
+                className="flex items-center gap-1 px-4 py-2 text-sm font-semibold text-indigo-600 hover:text-indigo-700 border border-indigo-200 rounded-full bg-white hover:bg-indigo-50/50 transition"
+              >
                 <BackArrow />
                 돌아가기
               </button>

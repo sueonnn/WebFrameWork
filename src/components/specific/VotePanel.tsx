@@ -468,7 +468,7 @@ const VotePanel: React.FC<VotePanelProps> = ({
     updateTimeByMeetingId(decision.meetingId, confirmedTime);
 
     // 체크리스트 상세 페이지로 이동
-    navigate(`/groups/checklist/${decision.meetingId}`);
+    navigate(`/groups/checkstory/${decision.meetingId}`);
   };
 
   // 확대 투표로 확정 → 찬성 인원이 가장 많은 후보를 확정 시간으로

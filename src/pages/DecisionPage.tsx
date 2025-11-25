@@ -120,7 +120,7 @@ const DecisionPage: React.FC = () => {
     <div className="mx-auto max-w-7xl px-4 pt-12 pb-12">
       {/* 뒤로가기: 스케줄 페이지 */}
       <Link
-        to="/groups/schedule"
+        to={`/groups/${gid}/timeline`}
         className="flex items-center text-indigo-600 hover:text-indigo-800 transition duration-150 mb-6"
       >
         <ArrowLeft className="w-5 h-5 mr-1" />
