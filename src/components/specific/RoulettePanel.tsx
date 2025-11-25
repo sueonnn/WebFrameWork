@@ -602,7 +602,7 @@ const RoulettePanel: React.FC<RoulettePanelProps> = ({
     updateTimeByMeetingId(decision.meetingId, winnerTime);
 
     // 해당 모임의 체크리스트 상세 페이지로 이동
-    navigate(`/groups/checklist/${decision.meetingId}`);
+    navigate(`/groups/checkstory/${decision.meetingId}`);
   };
 
   if (!decision || rouletteSegments.length === 0) {

@@ -44,3 +44,16 @@ export const TASKS_BY_MEETING: Record<string, Task[]> =
 
 export const GROUP_TIME_DECISIONS: GroupTimeDecision[] =
 timeDecisionsJson as GroupTimeDecision[];
+
+export function mapMemberIdsToUserIds(memberIds: string[]): string[] {
+  return memberIds
+    .map((memberId) => {
+      const member = MEMBERS.find((m) => m.id === memberId);
+      if (!member) return null;
+
+      // User/Member의 공통 키로 "name"을 사용해서 매핑 (목데이터 변경 없음)
+      const user = USERS.find((u) => u.name === member.name);
+      return user?.id ?? null;
+    })
+    .filter((v): v is string => Boolean(v));
+}

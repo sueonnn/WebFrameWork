@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import dayjs from "dayjs";
 import { useNavigate, useParams } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 import { useGroupScheduleStore } from "../stores/groupScheduleStore";
 import { useUserSettingStore } from "../stores/userScheduleSettingStore";
@@ -15,12 +16,14 @@ import TimelineHeatmapLegend from "../components/specific/group/timeline/Timelin
 import TimelineWeekTabs from "../components/specific/group/timeline/TimelineWeekTabs";
 import TimelineHeatmapTable from "../components/specific/group/timeline/TimelineHeatmapTable";
 
-import { GROUPS } from "../mock"; 
+import { GROUPS, mapMemberIdsToUserIds } from "../mock";
 import { useMeetingInfoStore } from "../stores/meetingInfoStore";
 
 export default function GroupTimelinePage() {
   const navigate = useNavigate();
   const { groupId: routeGroupId } = useParams<{ groupId: string }>();
+  const { user } = useAuth();
+
 
   const [activeTab, setActiveTab] = useState<"this" | "next">("this");
 
@@ -32,17 +35,18 @@ export default function GroupTimelinePage() {
     useGroupScheduleStore();
 
 
-  // Mock 데이터로 기본 그룹 정보 세팅
-  // 일단 예시로 첫 번째 그룹(g1)을 기준으로 사용
-  const mockGroup = GROUPS[0];
-  const currentGroupId = routeGroupId ?? mockGroup.id;
+  // 현재 그룹 결정 (route 우선, 없으면 첫 그룹) 
+  const currentGroupId = routeGroupId ?? GROUPS[0].id;
+  const mockGroup = useMemo(() => {
+    return GROUPS.find((g) => g.id === currentGroupId) ?? GROUPS[0];
+  }, [currentGroupId]);
+
+  // 헤더 정보 fallback 
   const isDefaultGroupName = !groupName || groupName === "우리 팀";
   const headerGroupName = isDefaultGroupName ? mockGroup.name : groupName;
   const headerMemberCount = memberCount || mockGroup.memberIds.length;
 
-  const meetingInfo = useMeetingInfoStore((s) =>
-    s.getByGroupId(currentGroupId)
-  );
+  const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(currentGroupId));
   const confirmedLocation = meetingInfo?.location ?? "아직 장소 미정";
 
   console.log("Timeline header group:", headerGroupName, headerMemberCount);
@@ -50,11 +54,34 @@ export default function GroupTimelinePage() {
   // 사용자 설정
   const { showWorkingHoursOnly, setShowWorkingHoursOnly } = useUserSettingStore();
 
-  // 그룹 스케줄 자동 계산
+  // memberIds가 store에 아직 없을 수 있으니 mockGroup.memberIds로 fallback
+  const effectiveMemberIds = useMemo(() => {
+    return memberIds?.length ? memberIds : mockGroup.memberIds;
+  }, [memberIds, mockGroup.memberIds]);
+
+  // memberIds(m1..) -> userIds(user1..)
+  const effectiveUserIds = useMemo(() => {
+    const mapped = mapMemberIdsToUserIds(effectiveMemberIds);
+    return mapped.length ? mapped : effectiveMemberIds; 
+  }, [effectiveMemberIds]);
+
   useEffect(() => {
-    const result = computeGroupSchedule(allSchedules, memberIds);
+    const result = computeGroupSchedule(allSchedules, effectiveUserIds);
     setGroupSchedules(result);
-  }, [allSchedules, memberIds]);
+  }, [allSchedules, effectiveUserIds, setGroupSchedules]);
+
+  // 스케줄 입력 페이지 이동: /groups/:groupId/schedule/:userId
+  const currentUserId = (user as any)?.id ?? null;
+  const handleClickSchedule = () => {
+    if (!currentUserId) {
+      navigate("/login");
+      return;
+    }
+    navigate(`/groups/${currentGroupId}/schedule/${currentUserId}`, {
+      state: { from: `/groups/${currentGroupId}/timeline` },
+    });
+  };
+
 
   // 날짜 계산
   const startOfWeek = useMemo(() => {
@@ -95,7 +122,7 @@ export default function GroupTimelinePage() {
         <TimelineHeader
           groupName={headerGroupName}
           memberCount={headerMemberCount}
-          onClickSchedule={() => navigate("/groups/schedule")}
+          onClickSchedule={handleClickSchedule}
         />
 
         {/* 안내 배너 */}
