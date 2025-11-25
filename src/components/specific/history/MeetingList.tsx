@@ -13,7 +13,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({ meeting }) => {
 
   const handleClick = () => {
     // 여기서 네가 원한 코드가 실행됨
-    navigate(`/groups/checklist/${meeting.id}`);
+    navigate(`/groups/checkstory/${meeting.id}`);
     // 만약 히스토리 상세로 가고 싶으면:
     // navigate(`/groups/checkstory/${meeting.id}`);
   };

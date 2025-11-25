@@ -274,6 +274,7 @@ import { Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { GROUP_TIME_DECISIONS, MEMBERS, MEETING_INFOS } from "../../mock";
 import type { GroupTimeDecision, TimeDecisionCandidate } from "../../mock";
+import { useMeetingInfoStore } from "../../stores/meetingInfoStore"; 
 
 type VotePanelProps = {
   groupId: string;
@@ -420,18 +421,20 @@ const VotePanel: React.FC<VotePanelProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  const updateTimeByMeetingId = useMeetingInfoStore(
+    (s) => s.updateTimeByMeetingId
+  );
+
   const decision: GroupTimeDecision | undefined = useMemo(
     () => GROUP_TIME_DECISIONS.find((d) => d.groupId === groupId),
     [groupId]
   );
 
-  const meeting = useMemo(
-    () =>
-      decision
-        ? MEETING_INFOS.find((m) => m.id === decision.meetingId)
-        : undefined,
-    [decision]
+  // meetingInfo는 store에서 가져오기 (장소+시간, 참가자)
+  const meeting = useMeetingInfoStore((s) =>
+    decision ? s.getByMeetingId(decision.meetingId) : undefined
   );
+
 
   const participants = meeting?.participants ?? [];
   const totalParticipants = participants.length || 1;
@@ -456,34 +459,16 @@ const VotePanel: React.FC<VotePanelProps> = ({
     });
   };
 
-  // ✅ 공통: 확정된 시간 mock에 반영 + 체크리스트 상세 페이지로 이동 (룰렛과 동일 컨셉)
+  // 공통: 확정된 시간 store에 반영 + 체크리스트 페이지로 이동
+  // (MEETING_INFOS는 더 이상 수정하지 않음)
   const updateMeetingTimeAndGoChecklist = (confirmedTime: string) => {
-    if (!confirmedTime) return;
+    if (!confirmedTime || !decision) return;
 
-    if (decision) {
-      const meetingIndex = MEETING_INFOS.findIndex(
-        (m) => m.id === decision.meetingId
-      );
+    // 시간 업데이트 (장소는 이미 다른 흐름에서 store에 들어가 있음)
+    updateTimeByMeetingId(decision.meetingId, confirmedTime);
 
-      if (meetingIndex !== -1) {
-        MEETING_INFOS[meetingIndex] = {
-          ...MEETING_INFOS[meetingIndex],
-          time: confirmedTime, // 체크리스트에서 보여줄 확정 시간
-        };
-      }
-
-      navigate(`/groups/checklist/${decision.meetingId}`);
-    } else {
-      // fallback: g1 → m1 기준
-      const fallbackIndex = MEETING_INFOS.findIndex((m) => m.id === "m1");
-      if (fallbackIndex !== -1) {
-        MEETING_INFOS[fallbackIndex] = {
-          ...MEETING_INFOS[fallbackIndex],
-          time: confirmedTime,
-        };
-      }
-      navigate("/groups/checklist/m1");
-    }
+    // 체크리스트 상세 페이지로 이동
+    navigate(`/groups/checklist/${decision.meetingId}`);
   };
 
   // 확대 투표로 확정 → 찬성 인원이 가장 많은 후보를 확정 시간으로
