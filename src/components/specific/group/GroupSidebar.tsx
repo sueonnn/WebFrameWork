@@ -3,23 +3,39 @@ import { useGroupScheduleStore } from "../../../stores/groupScheduleStore";
 import { useNavigate } from "react-router-dom";
 import { useMeetingInfoStore } from "../../../stores/meetingInfoStore";
 
+type MergedSchedule = {
+  this: Record<string, number>;
+  next: Record<string, number>;
+};
 
 type GroupSidebarProps = {
   groupId: string;
-  confirmedLocation: string; 
+  /** 페이지에서 미리 머지한 스케줄을 넘기고 싶을 때 (옵션) */
+  merged?: MergedSchedule;
+  /** 멤버 수를 직접 넘기고 싶을 때 (옵션, 없으면 store 값 사용) */
+  memberCount?: number;
+  /** 확정된 장소를 부모에서 넘길 때 (옵션, 없으면 store에서 조회) */
+  confirmedLocation?: string;
 };
 
-export default function GroupSidebar({ groupId }: GroupSidebarProps) {
-  const { groupSchedules, memberCount } = useGroupScheduleStore();
+export default function GroupSidebar({ groupId, merged, memberCount,confirmedLocation, }: GroupSidebarProps) {
+   // store 기반 그룹 스케줄 / 멤버 수
+  const { groupSchedules: storeSchedules, memberCount: storeMemberCount } =
+    useGroupScheduleStore();
 
-  const activeWeek = "this"; // 필요 시 부모 페이지에서 prop으로 받을 수도 있음
-  const weekData = groupSchedules[activeWeek] || {};
+  const activeWeek: keyof MergedSchedule = "this";
+
+   // 👉 weekData는 우선순위: props.merged > store.groupSchedules
+  const weekData: Record<string, number> =
+    merged?.[activeWeek] || storeSchedules[activeWeek] || {};
+
+  // 👉 멤버 수도 props > store 순으로 사용
+  const effectiveMemberCount = memberCount ?? storeMemberCount ?? 1; // 0으로 나눔 방지
 
   const top3 = useMemo(() => {
-    const entries = Object.entries(weekData); // [ ["2-14", 3], ... ]
+    const entries = Object.entries(weekData);
     if (entries.length === 0) return [];
 
-    // value(가능 인원수) 기준 내림차순 + 3개 슬라이싱
     return entries
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
@@ -30,12 +46,11 @@ export default function GroupSidebar({ groupId }: GroupSidebarProps) {
         return {
           rank: idx + 1,
           time: `${weekdays[day]}요일 ${hour}:00 - ${hour + 1}:00`,
-          percent: Math.round((count / memberCount) * 100),
-          members: `${count}/${memberCount}명 가능`,
-          trust: count === memberCount ? "신뢰도 높음" : "신뢰도 보통",
+          percent: Math.round((count / effectiveMemberCount) * 100),
+          members: `${count}/${effectiveMemberCount}명 가능`,
         };
       });
-  }, [weekData, memberCount]);
+  }, [weekData, effectiveMemberCount]);
 
   const golden = useMemo(() => {
     const entries = Object.entries(weekData);
@@ -48,15 +63,19 @@ export default function GroupSidebar({ groupId }: GroupSidebarProps) {
     return {
       time: `${weekdays[day]}요일 ${hour}:00~${hour + 1}:00`,
       count: bestCount,
-      percent: Math.round((bestCount / memberCount) * 100),
+      percent: Math.round((bestCount / effectiveMemberCount) * 100),
     };
-  }, [weekData, memberCount]);
+  }, [weekData, effectiveMemberCount]);
 
   return (
     <aside className="w-[320px] flex flex-col gap-6">
       <Top3Card data={top3} />
       <GoldenTimeCard golden={golden} />
-      <SmartPlaceCard groupId={groupId} />
+      <SmartPlaceCard
+        groupId={groupId}
+        memberCount={effectiveMemberCount}
+        confirmedLocation={confirmedLocation}
+      />
       <NextStepCard groupId={groupId} />
     </aside>
   );
@@ -133,17 +152,20 @@ function GoldenTimeCard({ golden }: { golden: any | null }) {
   );
 }
 
-function SmartPlaceCard({ groupId }: { groupId: string }) {
-  const { memberCount } = useGroupScheduleStore();
-  const navigate = useNavigate();       
+function SmartPlaceCard({ groupId, memberCount, confirmedLocation }: { groupId: string, memberCount: number; confirmedLocation?: string; }) {
+  const navigate = useNavigate();
   const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(groupId));
-  const confirmedLocation = meetingInfo?.location;        
+
+
+  // prop으로 온 confirmedLocation이 있으면 우선, 없으면 store 값 사용
+  const effectiveLocation = confirmedLocation ?? meetingInfo?.location ?? null;
+
 
   const items =
-    confirmedLocation 
+    effectiveLocation != null
       ? [
           {
-            place: confirmedLocation,
+            place: effectiveLocation,
             distance: "확정된 모임 장소",
           },
         ]

@@ -2,6 +2,7 @@ interface Props {
   newTaskText: string;
   setNewTaskText: React.Dispatch<React.SetStateAction<string>>;
   addTask: () => void;
+  userName: string;
 }
 
 export default function ChecklistAddTask({

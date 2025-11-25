@@ -50,6 +50,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: "/groups/:groupId/schedule/:userId",
+        element: (
+          <RequireAuth>
+            <SchedulePage />
+          </RequireAuth>
+        ),
+      },
+      {
         path: "/groups/:groupId/timeline",
         element: (
           <RequireAuth>
