@@ -2,35 +2,21 @@ import { create } from "zustand";
 import type { MySchedule } from "./schedule";
 
 interface MyScheduleState {
-  schedules: Record<string, MySchedule>;
+  /** 개인 일정 상태 (this / next 주차) */
+  schedules: MySchedule;
 
-  loadMemberSchedule: (memberId: string, data: MySchedule) => void;
-
-  updateMemberSchedule: (
-    memberId: string,
-    updater: (prev: MySchedule) => MySchedule
-  ) => void;
+  /** 일정 갱신 */
+  setSchedules: (updater: (prev: MySchedule) => MySchedule) => void;
 }
 
 export const useMyScheduleStore = create<MyScheduleState>((set) => ({
-  schedules: {},
+  schedules: {
+    this: new Set(),
+    next: new Set(),
+  },
 
-  loadMemberSchedule: (memberId, data) =>
+  setSchedules: (updater) =>
     set((state) => ({
-      schedules: {
-        ...state.schedules,
-        [memberId]: data,
-      },
+      schedules: updater(state.schedules),
     })),
-
-  updateMemberSchedule: (memberId, updater) =>
-    set((state) => {
-      const prev = state.schedules[memberId] ?? { this: new Set(), next: new Set() };
-      return {
-        schedules: {
-          ...state.schedules,
-          [memberId]: updater(prev),
-        },
-      };
-    }),
 }));

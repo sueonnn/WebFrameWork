@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Task } from "../../types/Task";
+import { TASKS_BY_MEETING } from "../../mock"; // ⭐ mock 가져오기
 
 interface TaskStore {
   tasksByMeeting: Record<string, Task[]>;
@@ -10,7 +11,8 @@ interface TaskStore {
 }
 
 export const useTaskStore = create<TaskStore>((set) => ({
-  tasksByMeeting: {},
+  // ⭐ mock 데이터로 초기화
+  tasksByMeeting: { ...TASKS_BY_MEETING },
 
   setTasks: (meetingId, tasks) =>
     set((state) => ({

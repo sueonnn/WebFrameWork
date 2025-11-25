@@ -2,75 +2,63 @@ import { useState, useMemo, useEffect } from "react";
 import dayjs from "dayjs";
 import { useNavigate, useParams } from "react-router-dom";
 
+import { useGroupScheduleStore } from "../stores/groupScheduleStore";
 import { useUserSettingStore } from "../stores/userScheduleSettingStore";
 import { useAllUserScheduleStore } from "../stores/allUserScheduleStore";
-import { useAuth } from "../contexts/AuthContext";
-import { computeGroupSchedule } from "../stores/services/groupScheduleService";
-import { useMeetingInfoStore } from "../stores/meetingInfoStore";
 
+import { computeGroupSchedule } from "../stores/services/groupScheduleService";
 import GroupSidebar from "../components/specific/group/GroupSidebar";
 
-// 분리 컴포넌트
+// 분리한 컴포넌트
 import TimelineHeader from "../components/specific/group/timeline/TimelineHeader";
 import TimelineHeatmapLegend from "../components/specific/group/timeline/TimelineHeatmapLegend.tsx";
 import TimelineWeekTabs from "../components/specific/group/timeline/TimelineWeekTabs";
 import TimelineHeatmapTable from "../components/specific/group/timeline/TimelineHeatmapTable";
 
-import { GROUPS } from "../mock";
-
-type WeekKey = "this" | "next";
-
-type MergedSchedule = {
-  this: Record<string, number>;
-  next: Record<string, number>;
-};
+import { GROUPS } from "../mock"; 
+import { useMeetingInfoStore } from "../stores/meetingInfoStore";
 
 export default function GroupTimelinePage() {
   const navigate = useNavigate();
   const { groupId: routeGroupId } = useParams<{ groupId: string }>();
 
-  const { user } = useAuth();
-  const currentUserId = user?.id;
+  const [activeTab, setActiveTab] = useState<"this" | "next">("this");
 
-  if (!currentUserId) {
-    return <div>로그인 정보를 불러오는 중...</div>;
-  }
+  // 전체 사용자 스케줄
+  const { schedules: allSchedules } = useAllUserScheduleStore();
 
-  const [activeTab, setActiveTab] = useState<WeekKey>("this");
+  // 그룹 정보 + 스케줄 setter
+  const { memberIds, groupName, memberCount, groupSchedules, setGroupSchedules } =
+    useGroupScheduleStore();
 
-  const [mergedSchedule, setMergedSchedule] = useState<MergedSchedule>({
-    this: {},
-    next: {},
-  });
 
-  // 1) 현재 그룹 (URL 없으면 첫 그룹)
-  const group = GROUPS.find((g) => g.id === routeGroupId) ?? GROUPS[0];
-  const headerGroupName = group.name;
-  const headerMemberCount = group.memberIds.length;
+  // Mock 데이터로 기본 그룹 정보 세팅
+  // 일단 예시로 첫 번째 그룹(g1)을 기준으로 사용
+  const mockGroup = GROUPS[0];
+  const currentGroupId = routeGroupId ?? mockGroup.id;
+  const isDefaultGroupName = !groupName || groupName === "우리 팀";
+  const headerGroupName = isDefaultGroupName ? mockGroup.name : groupName;
+  const headerMemberCount = memberCount || mockGroup.memberIds.length;
 
-  // 2) 미팅 정보 → 확정 장소
-  const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(group.id));
+  const meetingInfo = useMeetingInfoStore((s) =>
+    s.getByGroupId(currentGroupId)
+  );
   const confirmedLocation = meetingInfo?.location ?? "아직 장소 미정";
 
-  // 3) 유저 설정 (근무시간만 보기)
-  const { showWorkingHoursOnly, setShowWorkingHoursOnly } =
-    useUserSettingStore();
+  console.log("Timeline header group:", headerGroupName, headerMemberCount);
 
-  // ✅ 4) "이 그룹"의 memberId -> MySchedule 만 꺼내기 (1중 맵)
-  const groupSchedules = useAllUserScheduleStore(
-    (s) => s.schedules[group.id] ?? {}
-  );
-  // 타입: Record<string, MySchedule>
+  // 사용자 설정
+  const { showWorkingHoursOnly, setShowWorkingHoursOnly } = useUserSettingStore();
 
-  // ✅ 5) 그룹 히트맵 합산
+  // 그룹 스케줄 자동 계산
   useEffect(() => {
-    const merged = computeGroupSchedule(groupSchedules, group.memberIds);
-    setMergedSchedule(merged);
-  }, [groupSchedules, group.memberIds]);
+    const result = computeGroupSchedule(allSchedules, memberIds);
+    setGroupSchedules(result);
+  }, [allSchedules, memberIds]);
 
-  // 6) 이번주/다음주 기준 날짜
+  // 날짜 계산
   const startOfWeek = useMemo(() => {
-    const base = dayjs().startOf("week").add(1, "day"); // 월요일
+    const base = dayjs().startOf("week").add(1, "day");
     return activeTab === "next" ? base.add(7, "day") : base;
   }, [activeTab]);
 
@@ -83,16 +71,16 @@ export default function GroupTimelinePage() {
     [startOfWeek]
   );
 
-  // 7) 시간대
+  // 근무시간만 또는 24시간
   const hours = useMemo(
     () =>
       showWorkingHoursOnly
-        ? Array.from({ length: 9 }, (_, i) => i + 9) // 9~17시
+        ? Array.from({ length: 9 }, (_, i) => i + 9)
         : Array.from({ length: 24 }, (_, i) => i),
     [showWorkingHoursOnly]
   );
 
-  const schedules = mergedSchedule[activeTab] || {};
+  const schedules = groupSchedules[activeTab] || {};
 
   const getColor = (value: number) => {
     if (!value) return "#ffffff";
@@ -103,22 +91,25 @@ export default function GroupTimelinePage() {
   return (
     <section className="min-h-screen bg-[#F9FAFB] py-10">
       <div className="mx-auto w-[1200px] flex flex-col gap-8">
+        {/* 상단 헤더 컴포넌트 */}
         <TimelineHeader
           groupName={headerGroupName}
           memberCount={headerMemberCount}
-          onClickSchedule={() =>
-            navigate(`/groups/${group.id}/schedule/${currentUserId}`)
-          }
+          onClickSchedule={() => navigate("/groups/schedule")}
         />
 
+        {/* 안내 배너 */}
         <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm text-green-700 font-medium">
           💚 현재 겹칠 수 있는 시간대 업데이트 완료했어요.
         </div>
 
         <div className="grid grid-cols-[minmax(0,1fr)_320px] gap-6">
           <div className="rounded-2xl bg-white border border-gray-200 shadow-sm p-8">
+
+            {/* 범례 */}
             <TimelineHeatmapLegend />
 
+            {/* 이번주/다음주 + 근무시간 옵션 */}
             <TimelineWeekTabs
               activeTab={activeTab}
               setActiveTab={setActiveTab}
@@ -126,6 +117,7 @@ export default function GroupTimelinePage() {
               setShowWorkingHoursOnly={setShowWorkingHoursOnly}
             />
 
+            {/* 히트맵 테이블 */}
             <TimelineHeatmapTable
               days={days}
               hours={hours}
@@ -134,10 +126,9 @@ export default function GroupTimelinePage() {
             />
           </div>
 
+          {/* 우측 패널 */}
           <GroupSidebar
-            groupId={group.id}
-            merged={mergedSchedule}
-            memberCount={headerMemberCount}
+            groupId={currentGroupId}
             confirmedLocation={confirmedLocation}
           />
         </div>

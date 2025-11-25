@@ -5,30 +5,38 @@ import TrashIcon from "../../../icons/TrashIcon";
 
 interface Props {
   tasks: Task[];
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   participants: string[];
+  updateTask: (meetingId: string, taskId: string, update: Partial<Task>) => void;
+  deleteTask: (meetingId: string, taskId: string) => void;
+  meetingId: string;
 }
 
-export default function HistoryChecklist({ tasks, setTasks, participants }: Props) {
+export default function HistoryChecklist({
+  tasks,
+  participants,
+  updateTask,
+  deleteTask,
+  meetingId,
+}: Props) {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
-  const toggleCheck = (id: string) => {
-    setTasks((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t))
-    );
+  /** ✔ 체크 상태 변경(store 기반) */
+  const toggleCheck = (taskId: string) => {
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    updateTask(meetingId, taskId, { done: !task.done });
   };
 
+  /** ✔ 담당자 변경(store 기반) */
   const changePerson = (taskId: string, newPerson: string | null) => {
-    setTasks((prev) =>
-      prev.map((t) =>
-        t.id === taskId ? { ...t, assignee: newPerson } : t
-      )
-    );
+    updateTask(meetingId, taskId, { assignee: newPerson });
     setOpenDropdown(null);
   };
 
-  const deleteTask = (taskId: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== taskId));
+  /** ✔ 삭제(store 기반) */
+  const removeTask = (taskId: string) => {
+    deleteTask(meetingId, taskId);
   };
 
   const doneCount = tasks.filter((t) => t.done).length;
@@ -114,7 +122,7 @@ export default function HistoryChecklist({ tasks, setTasks, participants }: Prop
               )}
 
               <button
-                onClick={() => deleteTask(item.id)}
+                onClick={() => removeTask(item.id)}
                 className="text-gray-500 hover:text-gray-700"
               >
                 <TrashIcon />

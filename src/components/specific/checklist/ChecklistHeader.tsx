@@ -1,12 +1,8 @@
-import { useNavigate } from "react-router-dom";
-
 export default function ChecklistHeader() {
-  const navigate = useNavigate();
-
   return (
     <header className="space-y-3 mb-10">
       <button
-        onClick={() => navigate(-1)}
+        onClick={() => window.history.back()}
         className="inline-flex items-center gap-2 px-5 py-2 rounded-full 
                    bg-[#F4F4F7] text-[#5A60FF] font-semibold shadow-sm hover:shadow transition"
       >

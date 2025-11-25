@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
-import { useParams } from "react-router-dom";
-
 import { useMyScheduleStore } from "../../../stores/myScheduleStore";
 import { useUserSettingStore } from "../../../stores/userScheduleSettingStore";
 import { useAllUserScheduleStore } from "../../../stores/allUserScheduleStore";
-
 import type { WeekType } from "../../../types/schedule";
 
 interface TimeGridProps {
@@ -13,18 +10,13 @@ interface TimeGridProps {
 }
 
 export default function TimeGrid({ weekType }: TimeGridProps) {
-  const { groupId, memberId } = useParams<{ groupId: string; memberId: string }>();
-
-  const currentUserId = memberId!;  
-  const { schedules, updateMemberSchedule } = useMyScheduleStore();
+  const { schedules, setSchedules } = useMyScheduleStore();
   const { autoSave, showWorkingHoursOnly } = useUserSettingStore();
   const { setUserSchedule } = useAllUserScheduleStore();
 
   const [tempSelected, setTempSelected] = useState<Set<string>>(new Set());
   const isDraggingRef = useRef(false);
-
-  const mySchedule =
-    schedules[currentUserId] ?? { this: new Set<string>(), next: new Set<string>() };
+  const [hiddenSet, setHiddenSet] = useState<Set<string>>(new Set());
 
   const startOfWeek = useMemo(() => {
     const base = dayjs().startOf("week").add(1, "day");
@@ -47,9 +39,11 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
         : Array.from({ length: 24 }, (_, i) => i),
     [showWorkingHoursOnly]
   );
-
+  
   const displayedSet = useMemo(() => {
-    const base = new Set(mySchedule[weekType]); 
+    const base = new Set(schedules?.[weekType] ?? []);
+
+    hiddenSet.forEach((k) => base.delete(k));
 
     tempSelected.forEach((k) => {
       if (base.has(k)) base.delete(k);
@@ -57,7 +51,7 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
     });
 
     return base;
-  }, [mySchedule, weekType, tempSelected]);
+  }, [schedules, weekType, tempSelected, hiddenSet]);
 
   const toggleTemp = (day: number, hour: number) => {
     const key = `${day}-${hour}`;
@@ -78,24 +72,22 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
     toggleTemp(day, hour);
   };
 
-  /** 🔥 실제 저장 (tempSelected → store 반영) */
   const applyCommit = (week: WeekType) => {
-    if (!groupId) return;
-
-    updateMemberSchedule(currentUserId, (prev) => {
+    setSchedules((prev) => {
       const copy = {
         this: new Set(prev.this),
         next: new Set(prev.next),
       };
-
       const base = copy[week];
+
+      hiddenSet.forEach((k) => base.delete(k));
 
       tempSelected.forEach((k) => {
         if (base.has(k)) base.delete(k);
         else base.add(k);
       });
 
-      setUserSchedule(groupId, currentUserId, {
+      setUserSchedule("user1", {
         this: new Set(copy.this),
         next: new Set(copy.next),
       });
@@ -104,10 +96,13 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
     });
 
     setTempSelected(new Set());
+    setHiddenSet(new Set());
   };
+
 
   const handleMouseUp = () => {
     isDraggingRef.current = false;
+
     if (autoSave) {
       applyCommit(weekType);
     }
@@ -116,22 +111,34 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
   useEffect(() => {
     const clearTemp = () => {
       if (!autoSave) {
-        setTempSelected(new Set());
+        const storeSet = schedules?.[weekType] ?? new Set();
+        setHiddenSet(new Set(storeSet));
       }
+
+      setTempSelected(new Set());
     };
 
     const commitTemp = (e: Event) => {
-      const { week } = (e as CustomEvent<{ week: WeekType }>).detail || {};
-      if (!week || autoSave) return;
+      const { week } =
+        (e as CustomEvent<{ week: WeekType }>).detail || {};
+      if (!week) return;
+      if (autoSave) return; 
+
       applyCommit(week);
     };
 
     window.addEventListener("clear-temp-cells", clearTemp);
-    window.addEventListener("commit-temp-cells", commitTemp as EventListener);
+    window.addEventListener(
+      "commit-temp-cells",
+      commitTemp as EventListener
+    );
 
     return () => {
       window.removeEventListener("clear-temp-cells", clearTemp);
-      window.removeEventListener("commit-temp-cells", commitTemp as EventListener);
+      window.removeEventListener(
+        "commit-temp-cells",
+        commitTemp as EventListener
+      );
     };
   }, [autoSave, tempSelected, weekType]);
 
@@ -163,14 +170,12 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
             ))}
           </tr>
         </thead>
-
         <tbody>
           {hours.map((hour) => (
             <tr key={hour}>
               <td className="text-right pr-2 text-xs text-gray-400 whitespace-nowrap">
                 {String(hour).padStart(2, "0")}:00
               </td>
-
               {Array.from({ length: 7 }).map((_, day) => {
                 const key = `${day}-${hour}`;
                 const isSelected = displayedSet.has(key);
@@ -179,11 +184,10 @@ export default function TimeGrid({ weekType }: TimeGridProps) {
                     key={key}
                     onMouseDown={() => handleMouseDown(day, hour)}
                     onMouseEnter={() => handleMouseEnter(day, hour)}
-                    className={`h-10 w-[120px] border-[1.5px] rounded-sm cursor-pointer transition-colors ${
-                      isSelected
-                        ? "bg-indigo-200 border-indigo-400"
-                        : "bg-white border-[#EEEFF2] hover:bg-indigo-50"
-                    }`}
+                    className={`h-10 w-[120px] border-[1.5px] rounded-sm cursor-pointer transition-colors ${isSelected
+                      ? "bg-indigo-200 border-indigo-400"
+                      : "bg-white border-[#EEEFF2] hover:bg-indigo-50"
+                      }`}
                   />
                 );
               })}

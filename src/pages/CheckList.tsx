@@ -1,15 +1,12 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-
+import React, { useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Task } from "../types/Task";
-import { MEETING_INFOS, TASKS_BY_MEETING } from "../mock";
+import { MEETING_INFOS, TASKS_BY_MEETING, CURRENT_USER } from "../mock";
 import type { MeetingInfo } from "../types/MeetingInfo";
-import type { Meeting } from "../types/history";
-
 import { useMeetingInfoStore } from "../stores/meetingInfoStore";
 import { useAuth } from "../contexts/AuthContext";
 import { useTaskStore } from "../stores/checklist/useTaskStore";
-import { useHistoryStore } from "../stores/checklist/useHistoryStore";
+
 
 // 분리한 컴포넌트들
 import ChecklistHeader from "../components/specific/checklist/ChecklistHeader";
@@ -22,79 +19,51 @@ import ChecklistFinalCTA from "../components/specific/checklist/ChecklistFinalCT
 
 const CheckListPage: React.FC = () => {
   const { meetingId } = useParams<{ meetingId?: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const userName = user?.name ?? "이름 없음";
 
-  const { updateOrAddHistory } = useHistoryStore();
+  const targetId = meetingId ?? "m1"; // 없으면 기본값 m1
 
-  if (!meetingId) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        잘못된 접근입니다. (meetingId 없음)
-      </div>
-    );
-  }
-
-  // ===== meeting 정보: store 우선, 없으면 mock =====
   const meetingFromStore = useMeetingInfoStore((s) =>
-    s.getByMeetingId(meetingId)
+    s.getByMeetingId(targetId)
   );
 
   const meeting: MeetingInfo | undefined =
-    meetingFromStore ?? MEETING_INFOS.find((m) => m.id === meetingId);
+    meetingFromStore ?? MEETING_INFOS.find((m) => m.id === targetId);
 
-  if (!meeting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-gray-500">
-        존재하지 않는 모임입니다.
-      </div>
-    );
-  }
+  if (!meeting) return <div>Meeting not found</div>;
 
   const members = meeting.participants;
-
-  // ===== Task Zustand Store =====
   const {
     tasksByMeeting,
     addTask: storeAddTask,
+    updateTask: storeUpdateTask,
     deleteTask: storeDeleteTask,
-    updateTask,
-    setTasks,
+    setTasks: storeSetTasks,
   } = useTaskStore();
 
-  // meetingId 최초 접근 시 mock에서 초기 값 로드
-  useEffect(() => {
-    if (!tasksByMeeting[meetingId]) {
-      setTasks(meetingId, TASKS_BY_MEETING[meetingId] ?? []);
-    }
-  }, [meetingId, tasksByMeeting, setTasks]);
-
-  const tasks: Task[] = tasksByMeeting[meetingId] ?? [];
+  const tasks = tasksByMeeting[targetId] ?? [];
 
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [newTaskText, setNewTaskText] = useState("");
 
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter((t) => t.done).length;
-  const progress =
-    totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
+  const progress = totalTasks === 0 ? 0 : Math.round((doneTasks / totalTasks) * 100);
 
-  // ===== 액션들 =====
+  const { user } = useAuth();
 
   // 체크박스 토글
   const toggleTaskDone = (id: string) => {
-    const target = tasks.find((t) => t.id === id);
-    if (!target) return;
-    updateTask(meetingId, id, { done: !target.done });
-  };
+  const task = tasks.find((t) => t.id === id);
+  if (!task) return;
+  storeUpdateTask(targetId, id, { done: !task.done });
+};
 
-  // 담당자 변경
   const changeAssignee = (id: string, name: string | null) => {
-    updateTask(meetingId, id, { assignee: name });
-  };
+  storeUpdateTask(targetId, id, { assignee: name });
+};
 
-  // 신규 할 일 추가 (@이름 파싱 포함)
+
+  // 신규 할 일 추가
   const addTask = () => {
     if (!newTaskText.trim()) return;
 
@@ -110,33 +79,29 @@ const CheckListPage: React.FC = () => {
       }
     }
 
-    const today = new Date();
-    const formattedToday = `${today.getFullYear()}년 ${
-      today.getMonth() + 1
-    }월 ${today.getDate()}일`;
+    const addedBy = user?.name ?? "나";
 
     const newTask: Task = {
       id: Date.now().toString(),
       title,
-      addedBy: userName,
-      date: formattedToday,
+      addedBy,
+      date: meeting.date,
       done: false,
       assignee,
     };
 
-    storeAddTask(meetingId, newTask);
+    storeAddTask(targetId, newTask);
+
     setNewTaskText("");
   };
 
-  // 삭제
   const deleteTask = (id: string) => {
-    storeDeleteTask(meetingId, id);
+    storeDeleteTask(targetId, id);
+
   };
 
-  // 멤버별 통계
   const memberStats = useMemo(() => {
     const stats: Record<string, { done: number; total: number }> = {};
-
     members.forEach((m) => {
       stats[m] = { done: 0, total: 0 };
     });
@@ -150,51 +115,23 @@ const CheckListPage: React.FC = () => {
     return stats;
   }, [tasks, members]);
 
-  // ===== 히스토리 저장(onSave) =====
-  const handleSaveHistory = () => {
-    const progressStr = `${progress}% 완료`;
-
-    const today = new Date();
-    const formatted = `${today.getFullYear()}년 ${today.getMonth() + 1}월 ${
-      today.getDate()
-    }일`;
-
-    const dataToSave: Meeting = {
-      id: meeting.id,
-      groupId: meeting.groupId,
-      title: meeting.title,
-      date: formatted,
-      time: meeting.time,
-      location: meeting.location,
-      participants: `${members.length}명 참석`,
-      status: progressStr,
-      statusClasses:
-        progress === 100
-          ? "bg-green-100 text-green-700"
-          : progress >= 70
-          ? "bg-blue-100 text-blue-700"
-          : "bg-yellow-100 text-yellow-800",
-    };
-
-    updateOrAddHistory(dataToSave);
-    navigate("/history");
-  };
-
   return (
     <div className="min-h-screen bg-[#F7F7FB] flex justify-center py-12">
       <div className="w-full max-w-7xl px-4">
+
         <ChecklistHeader />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
           {/* LEFT */}
           <div className="col-span-2 flex flex-col gap-8">
+
             <ChecklistMeetingCard meeting={meeting} members={members} />
 
             <ChecklistAddTask
               newTaskText={newTaskText}
               setNewTaskText={setNewTaskText}
               addTask={addTask}
-              userName={userName}
             />
 
             <ChecklistItems
@@ -215,8 +152,10 @@ const CheckListPage: React.FC = () => {
           <div className="col-span-1 flex flex-col gap-8 self-start">
             <ChecklistParticipants members={members} />
             <ChecklistStatsByMember members={members} memberStats={memberStats} />
-            <ChecklistFinalCTA onSave={handleSaveHistory} />
+            <ChecklistFinalCTA meetingId={targetId} />
+
           </div>
+
         </div>
       </div>
     </div>

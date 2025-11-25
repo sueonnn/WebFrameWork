@@ -1,31 +1,25 @@
 import React, { useMemo } from "react";
+import { useGroupScheduleStore } from "../../../stores/groupScheduleStore";
 import { useNavigate } from "react-router-dom";
 import { useMeetingInfoStore } from "../../../stores/meetingInfoStore";
 
+
 type GroupSidebarProps = {
   groupId: string;
-  merged: {
-    this: Record<string, number>;
-    next: Record<string, number>;
-  };
-  memberCount: number;
-  confirmedLocation: string; // ⭐ 추가
+  confirmedLocation: string; 
 };
 
-export default function GroupSidebar({
-  groupId,
-  merged,
-  memberCount,
-  confirmedLocation,
-}: GroupSidebarProps) {
-  const activeWeek = "this";
-  const weekData = merged[activeWeek] || {};
+export default function GroupSidebar({ groupId }: GroupSidebarProps) {
+  const { groupSchedules, memberCount } = useGroupScheduleStore();
 
-  /** TOP3 */
+  const activeWeek = "this"; // 필요 시 부모 페이지에서 prop으로 받을 수도 있음
+  const weekData = groupSchedules[activeWeek] || {};
+
   const top3 = useMemo(() => {
-    const entries = Object.entries(weekData);
+    const entries = Object.entries(weekData); // [ ["2-14", 3], ... ]
     if (entries.length === 0) return [];
 
+    // value(가능 인원수) 기준 내림차순 + 3개 슬라이싱
     return entries
       .sort((a, b) => b[1] - a[1])
       .slice(0, 3)
@@ -38,11 +32,11 @@ export default function GroupSidebar({
           time: `${weekdays[day]}요일 ${hour}:00 - ${hour + 1}:00`,
           percent: Math.round((count / memberCount) * 100),
           members: `${count}/${memberCount}명 가능`,
+          trust: count === memberCount ? "신뢰도 높음" : "신뢰도 보통",
         };
       });
   }, [weekData, memberCount]);
 
-  /** 황금시간 */
   const golden = useMemo(() => {
     const entries = Object.entries(weekData);
     if (entries.length === 0) return null;
@@ -62,18 +56,11 @@ export default function GroupSidebar({
     <aside className="w-[320px] flex flex-col gap-6">
       <Top3Card data={top3} />
       <GoldenTimeCard golden={golden} />
-
-      <SmartPlaceCard
-        groupId={groupId}
-        memberCount={memberCount}
-      />
-
+      <SmartPlaceCard groupId={groupId} />
       <NextStepCard groupId={groupId} />
     </aside>
   );
 }
-
-/* ---- Top3Card -------------------------------------------------- */
 
 function Top3Card({ data }: { data: any[] }) {
   if (!data || data.length === 0) {
@@ -95,14 +82,8 @@ function Top3Card({ data }: { data: any[] }) {
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <span
-                className={`inline-flex h-7 w-7 items-center justify-center rounded-full 
-                ${item.rank === 1
-                    ? "bg-amber-400"
-                    : item.rank === 2
-                      ? "bg-gray-400"
-                      : "bg-orange-400"
-                  }
+              <span className={`inline-flex h-7 w-7 items-center justify-center rounded-full 
+                  ${item.rank === 1 ? "bg-amber-400" : item.rank === 2 ? "bg-gray-400" : "bg-orange-400"}
                 text-white text-sm font-extrabold`}
               >
                 {item.rank}
@@ -130,8 +111,6 @@ function Top3Card({ data }: { data: any[] }) {
   );
 }
 
-/* ---- GoldenTimeCard -------------------------------------------- */
-
 function GoldenTimeCard({ golden }: { golden: any | null }) {
   if (!golden) {
     return (
@@ -154,16 +133,11 @@ function GoldenTimeCard({ golden }: { golden: any | null }) {
   );
 }
 
-function SmartPlaceCard({
-  groupId,
-  memberCount
-}: {
-  groupId: string;
-  memberCount: number;
-}) {
-  const navigate = useNavigate();
- const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(groupId));
- const confirmedLocation = meetingInfo?.location;        
+function SmartPlaceCard({ groupId }: { groupId: string }) {
+  const { memberCount } = useGroupScheduleStore();
+  const navigate = useNavigate();       
+  const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(groupId));
+  const confirmedLocation = meetingInfo?.location;        
 
   const items =
     confirmedLocation 
@@ -224,12 +198,12 @@ function NextStepCard({ groupId }: { groupId: string }) {
       </p>
 
       <button className="mt-4 h-11 w-full rounded-full bg-indigo-600 text-white text-sm font-semibold shadow hover:bg-indigo-700 transition"
-        onClick={goRoulette}>
+      onClick={goRoulette}>
         타임룰렛으로 결정
       </button>
 
       <button className="mt-2 h-11 w-full rounded-full border border-indigo-200 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition"
-        onClick={goVote}>
+      onClick={goVote}>
         투표로 결정
       </button>
     </div>

@@ -8,6 +8,6 @@ export interface MeetingInfo {
   time: string;              // "목요일 19:00~20:00"
   location: string;          // "강남역 2번 출구 스타벅스"
   participants: string[];    // 참석자 리스트 ["김철수", "이영희"...]
-  //memo?: string;             // 선택적 메모
+  memo?: string;             // 선택적 메모
 }
 

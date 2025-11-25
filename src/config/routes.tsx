@@ -23,8 +23,6 @@ export const router = createBrowserRouter([
       // 누구나 볼 수 있는 페이지
       { index: true, element: <MainPage /> },
       { path: "/login", element: <LoginPage /> },
-      { path: "/groups/recommend", element: <GroupPlaceRecommendPage /> },
-      { path: "/stations/cafes", element: <StationCafePage /> },
 
       // 로그인 필수 페이지
       {
@@ -44,7 +42,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: "/groups/:groupId/schedule/:memberId",
+        path: "/groups/schedule",
         element: (
           <RequireAuth>
             <SchedulePage />
@@ -68,14 +66,6 @@ export const router = createBrowserRouter([
         ),
       },
       { path: "/stations/cafes", element: <StationCafePage /> },
-      {
-        path: "/groups/checklist/:meetingId",
-        element: (
-          <RequireAuth>
-            <CheckListPage />
-          </RequireAuth>
-        ),
-      },
       {
         path: "/groups/checklist/:meetingId",
         element: (
