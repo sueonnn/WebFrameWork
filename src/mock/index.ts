@@ -33,6 +33,8 @@ export const MEMBERS: Member[] = membersJson as Member[];
 export const GROUPS: Group[] = groupsJson as Group[];
 export const MEETINGS: Meeting[] = meetingsJson as Meeting[];
 
+export const CURRENT_USER: User = USERS[0];
+
 // 모임 상세 정보
 export const MEETING_INFOS: MeetingInfo[] = meetingInfosJson as MeetingInfo[];
 

@@ -9,6 +9,7 @@ export default function GroupJoinForm() {
   const [modalMessage, setModalMessage] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [canGoSchedule, setCanGoSchedule] = useState(false);
+  const [joinedGroupId, setJoinedGroupId] = useState<string | null>(null); 
 
   const navigate = useNavigate();
 
@@ -20,6 +21,7 @@ export default function GroupJoinForm() {
       setShowModal(true);
       return;
     }
+    
     if (trimmed.length < 8) {
       setModalMessage("초대 코드는 8자리여야 합니다.");
       setShowModal(true);
@@ -34,6 +36,8 @@ export default function GroupJoinForm() {
       return;
     }
 
+    setJoinedGroupId(group.id);
+
     // 참여 성공 연출
     console.log("참여 코드:", trimmed, "=> 그룹:", group);
 
@@ -47,9 +51,16 @@ export default function GroupJoinForm() {
 
    const handleModalClose = () => {
     setShowModal(false);
+<<<<<<< HEAD
     if (canGoSchedule) {
       navigate(`/groups/${joinedGroupId}/timeline`);
       setCanGoSchedule(false);      
+=======
+    if (canGoSchedule && joinedGroupId)  {
+      navigate(`/groups/${joinedGroupId}/timeline`);
+      setCanGoSchedule(false);    
+      setJoinedGroupId(null);  
+>>>>>>> 24e5f22d5a5486299272f347a15ca3cb7eea715b
     }
   };
 

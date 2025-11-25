@@ -1,8 +1,7 @@
+import type { MeetingInfo } from "../../../types/MeetingInfo";
+
 interface Props {
-  meeting: {
-    time: string;
-    location: string;
-  };
+  meeting: MeetingInfo;
   members: string[];
 }
 

@@ -5,23 +5,32 @@ import { GroupPlaceHeader } from '../components/group/GroupPlaceHeader';
 import { GroupPlaceRadiusSelector } from '../components/group/GroupPlaceRadiusSelector';
 import { GroupPlaceMap } from '../components/group/GroupPlaceMap';
 import { GroupPlaceStationList } from '../components/group/GroupPlaceStationList';
-import { MEMBERS } from '../mock';
+import { MEMBERS, GROUPS } from '../mock';
 
 const RADIUS_OPTIONS = [300, 500, 800, 1000, 1500, 2000];
 
 
 export default function GroupPlaceRecommendPage() {
   const nav = useNavigate();
-  const params = useParams<{ groupId: string }>();
-  const groupId = params.groupId ?? "g1";
+  const { groupId = "g1" } = useParams<{ groupId: string }>();
 
   // 선택된 검색 반경
   const [radius, setRadius] = useState(500);
   // 카카오 Places 검색 결과(Station 목록)
   const [stations, setStations] = useState<Station[]>([]);
 
-  // 나중에 store 연동 시를 대비해 useMemo 사용 (여기서는 mock 고정)
-  const members: Member[] = useMemo(() => MEMBERS, []);
+  // 현재 그룹 찾기
+  const currentGroup = useMemo(
+    () => GROUPS.find((g) => g.id === groupId) ?? GROUPS[0],
+    [groupId]
+  );
+
+  // “해당 그룹에 속한 멤버들만” 필터링
+  const membersInGroup: Member[] = useMemo(() => {
+    if (!currentGroup) return [];
+    const idSet = new Set(currentGroup.memberIds); // ["m1","m2",...]
+    return MEMBERS.filter((m) => idSet.has(m.id)); // m.id / m.memberId 등 실제 필드명 맞춰줘
+  }, [currentGroup]);
 
   // 상위 3개 추천 역
   const top3 = useMemo(() => stations.slice(0, 3), [stations]);
@@ -33,9 +42,8 @@ export default function GroupPlaceRecommendPage() {
         <GroupPlaceHeader />
         <button
           type="button"
-          onClick={() => nav(`/groups/timeline`)}
+          onClick={() => nav(`/groups/${groupId}/timeline`)} 
           className="h-9 shrink-0 rounded-lg border px-3 text-sm hover:bg-gray-50"
-          title="메인으로 이동"
         >
           ← 뒤로가기
         </button>
@@ -53,7 +61,7 @@ export default function GroupPlaceRecommendPage() {
         {/* 지도 영역 */}
         <div className="lg:col-span-2 rounded-2xl border bg-green-50 min-h-[420px] p-2">
           <GroupPlaceMap
-            members={members}
+            members={membersInGroup}
             radius={radius}
             // 지도에서 역 검색 결과가 바뀔 때 상태 업데이트
             onStationsChange={setStations}
