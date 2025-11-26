@@ -1,16 +1,19 @@
 import { useNavigate } from "react-router-dom";
 import LocationModal from "./LocationModal";
+import { useUserLocationStore } from "../../../stores/userLocationStore";
 import { useState } from "react";
+import { useTimeDecisionStore } from "../../../stores/timeDecisionStore";
 
 type Props = {
   totalHours: number;
   groupId: string;
 };
 
-
 export default function ScheduleSidebar({ totalHours, groupId }: Props) {
   const [openLocationModal, setOpenLocationModal] = useState(false);
-  const [address, setAddress] = useState("");
+  const address = useUserLocationStore((s) => s.address);
+  const setAddress = useUserLocationStore((s) => s.setAddress);
+
 
   return (
     <aside className="w-[320px] flex flex-col gap-6">
@@ -21,22 +24,16 @@ export default function ScheduleSidebar({ totalHours, groupId }: Props) {
       <MySummaryCard totalHours={totalHours} />
       <OverlapTopCard />
 
-      {/* 위치 설정 팝업 */}
       <LocationModal
         isOpen={openLocationModal}
         onClose={() => setOpenLocationModal(false)}
-        onSelectAddress={(addr) => setAddress(addr)}
+        onSelectAddress={(addr) => setAddress(addr)} 
       />
-
     </aside>
   );
 }
 
-
-/** ===== 내부 카드들 (과분리 방지: 한 파일에 캡슐화) ===== */
-
 function LocationCard({ onOpen, address }: { onOpen: () => void; address: string }) {
-
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
       <div className="mb-6 flex items-center justify-between">
@@ -74,7 +71,6 @@ function LocationCard({ onOpen, address }: { onOpen: () => void; address: string
   );
 }
 
-
 function MySummaryCard({ totalHours }: { totalHours: number }) {
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
@@ -88,30 +84,33 @@ function MySummaryCard({ totalHours }: { totalHours: number }) {
 }
 
 function OverlapTopCard() {
-  const items = [
-    { time: "목 19:00-20:00", members: "5/6명" },
-    { time: "금 18:00-19:00", members: "4/6명" },
-    { time: "토 14:00-15:00", members: "4/6명" },
-  ];
+  const top3 = useTimeDecisionStore((s) => s.top3);
 
   return (
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
       <h3 className="mb-4 text-base font-semibold text-gray-900">겹침 상위 시간대</h3>
-      {items.map((t) => (
-        <div
-          key={t.time}
-          className="mb-3 rounded-xl bg-[#F9FAFB] p-4 flex flex-col shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-gray-100"
-        >
-          <div className="flex items-center justify-between">
-            <span className="font-semibold text-[15px] text-gray-900 tracking-tight">
-              {t.time}
-            </span>
-            <span className="text-[15px] font-bold text-indigo-600">{t.members}</span>
+
+      {(!top3 || top3.length === 0) && (
+        <div className="text-sm text-gray-500">아직 데이터가 없어요.</div>
+      )}
+
+      {top3 &&
+        top3.map((t) => (
+          <div
+            key={t.rank}
+            className="mb-3 rounded-xl bg-[#F9FAFB] p-4 flex flex-col shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-gray-100"
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-semibold text-[15px] text-gray-900 tracking-tight">
+                {t.time}
+              </span>
+              <span className="text-[15px] font-bold text-indigo-600">
+                {t.members}
+              </span>
+            </div>
+            <span className="mt-1 text-[13px] text-gray-400">가능 인원</span>
           </div>
-          <span className="mt-1 text-[13px] text-gray-400">가능 인원</span>
-        </div>
-      ))}
+        ))}
     </div>
   );
 }
-
