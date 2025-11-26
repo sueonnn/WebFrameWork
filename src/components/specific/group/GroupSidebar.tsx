@@ -210,16 +210,33 @@
 //   );
 // }
 
-
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect } from "react";
+import { useTimeDecisionStore } from "../../../stores/timeDecisionStore";
 import { useGroupScheduleStore } from "../../../stores/groupScheduleStore";
 import { useNavigate } from "react-router-dom";
+
+type CandidateItem = {
+  id: string;
+  timeLabel: string;
+  availableCount: number;
+};
+
+type TopItem = {
+  rank: number;
+  time: string;
+  percent: number;
+  members: string;
+};
 
 type GroupSidebarProps = {
   groupId: string;
   confirmedLocation: string;
   memberCount: number;
   activeWeek: "this" | "next";
+  onComputedCandidates?: (data: {
+    top3: TopItem[];
+    candidates: CandidateItem[];
+  }) => void;
 };
 
 export default function GroupSidebar({
@@ -227,16 +244,31 @@ export default function GroupSidebar({
   confirmedLocation,
   memberCount,
   activeWeek,
+  onComputedCandidates,
 }: GroupSidebarProps) {
   const navigate = useNavigate();
   const { groupSchedules } = useGroupScheduleStore();
 
   const weekData = groupSchedules?.[activeWeek] || {};
-
   const weekdays = ["월", "화", "수", "목", "금", "토", "일"];
 
+  const candidates = useMemo(() => {
+    const majority = Math.ceil(memberCount / 2);
+
+    return Object.entries(weekData)
+      .filter(([_, count]) => count >= majority)
+      .map(([key, count]) => {
+        const [day, hour] = key.split("-").map(Number);
+        return {
+          id: key,
+          timeLabel: `${weekdays[day]}요일 ${hour}:00~${hour + 1}:00`,
+          availableCount: count,
+        };
+      });
+  }, [weekData, memberCount]);
+
   const top3 = useMemo(() => {
-    const entries = Object.entries(weekData) as Array<[string, number]>;
+    const entries = Object.entries(weekData);
     if (entries.length === 0 || memberCount <= 0) return [];
 
     return entries
@@ -257,7 +289,7 @@ export default function GroupSidebar({
   }, [weekData, memberCount]);
 
   const golden = useMemo(() => {
-    const entries = Object.entries(weekData) as Array<[string, number]>;
+    const entries = Object.entries(weekData);
     if (entries.length === 0 || memberCount <= 0) return null;
 
     const [bestKey, bestCount] = entries.sort((a, b) => b[1] - a[1])[0];
@@ -271,6 +303,20 @@ export default function GroupSidebar({
     };
   }, [weekData, memberCount]);
 
+  useEffect(() => {
+    useTimeDecisionStore
+      .getState()
+      .setDecisionData({
+        top3,
+        candidates,
+        participants: [],
+      });
+
+    if (onComputedCandidates) {
+      onComputedCandidates({ top3, candidates });
+    }
+  }, [top3, candidates]);
+
   const goRoulette = () => navigate(`/groups/${groupId}/decide?tab=roulette`);
   const goVote = () => navigate(`/groups/${groupId}/decide?tab=vote`);
   const goRecommend = () => navigate(`/groups/${groupId}/recommend`);
@@ -279,9 +325,7 @@ export default function GroupSidebar({
     <aside className="w-[320px] flex flex-col gap-6">
       <Top3Card data={top3} />
       <GoldenTimeCard golden={golden} />
-
       <SmartPlaceCard confirmedLocation={confirmedLocation} onMore={goRecommend} />
-
       <NextStepCard onRoulette={goRoulette} onVote={goVote} />
     </aside>
   );

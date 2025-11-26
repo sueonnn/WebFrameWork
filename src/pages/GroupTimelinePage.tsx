@@ -189,7 +189,6 @@ import type { MySchedule } from "../stores/schedule";
 
 type WeekKey = "this" | "next";
 
-/** 여러 멤버 스케줄 합치는 함수 (기존 그대로) */
 function computeGroupSchedule(
   memberSchedules: Record<string, MySchedule>,
   memberIds: string[]
@@ -213,7 +212,6 @@ function computeGroupSchedule(
   return result;
 }
 
-/** m1 / user1 같은 key 꼬임 보정 */
 function normalizeSchedulesToMemberIds(
   allSchedules: Record<string, MySchedule>,
   memberIds: string[]
@@ -246,15 +244,13 @@ export default function GroupTimelinePage() {
 
   const [activeTab, setActiveTab] = useState<WeekKey>("this");
 
-  // ✅ 전체 사용자 스케줄 + hydration 여부
   const { schedules: allSchedulesRaw, hasHydrated } = useAllUserScheduleStore();
-
-  // 그룹 집계 스토어
   const { groupSchedules, setGroupSchedules } = useGroupScheduleStore();
 
   const { showWorkingHoursOnly, setShowWorkingHoursOnly } = useUserSettingStore();
 
   const currentGroupId = routeGroupId ?? GROUPS[0].id;
+
   const mockGroup = useMemo(
     () => GROUPS.find((g) => g.id === currentGroupId) ?? GROUPS[0],
     [currentGroupId]
@@ -267,29 +263,18 @@ export default function GroupTimelinePage() {
   const meetingInfo = useMeetingInfoStore((s) => s.getByGroupId(currentGroupId));
   const confirmedLocation = meetingInfo?.location ?? "아직 장소 미정";
 
-  // ✅ hydration 끝나기 전엔 비어있는 {}만 쓴다
   const normalizedSchedules = useMemo(() => {
     if (!hasHydrated) return {};
     return normalizeSchedulesToMemberIds(allSchedulesRaw ?? {}, memberIds);
   }, [allSchedulesRaw, memberIds, hasHydrated]);
 
-  // ✅ hydration 후에만 집계
   useEffect(() => {
     if (!hasHydrated) return;
 
     const result = computeGroupSchedule(normalizedSchedules, memberIds);
     setGroupSchedules(result);
-
-    console.log("[Timeline] hydrated =", hasHydrated);
-    console.log("[Timeline] memberIds =", memberIds);
-    console.log("[Timeline] normalized keys =", Object.keys(normalizedSchedules));
-    console.log(
-      "[Timeline] aggregated(this) size =",
-      Object.keys(result.this).length
-    );
   }, [normalizedSchedules, memberIds, setGroupSchedules, hasHydrated]);
 
-  // 스케줄 입력 페이지 이동
   const currentMemberId =
     (user as any)?.memberId ?? (user as any)?.id ?? memberIds[0] ?? null;
 
@@ -300,7 +285,6 @@ export default function GroupTimelinePage() {
     });
   };
 
-  // 날짜/시간 계산 (기존 그대로)
   const startOfWeek = useMemo(() => {
     const base = dayjs().startOf("week").add(1, "day");
     return activeTab === "next" ? base.add(7, "day") : base;
@@ -326,7 +310,6 @@ export default function GroupTimelinePage() {
 
   const schedules = groupSchedules[activeTab] || {};
 
-  // 🔵 겹칠수록 진하게
   const getColor = (value: number) => {
     if (!value) return "#ffffff";
     const ratio = Math.min(1, Math.max(0, value / headerMemberCount));
@@ -358,7 +341,6 @@ export default function GroupTimelinePage() {
               setShowWorkingHoursOnly={setShowWorkingHoursOnly}
             />
 
-            {/* hasHydrated 되기 전에는 빈 히트맵만 보여줌 */}
             <TimelineHeatmapTable
               days={days}
               hours={hours}
