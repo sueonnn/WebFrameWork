@@ -72,7 +72,7 @@ const DecisionPage: React.FC = () => {
 
       <p className="text-sm text-gray-500 mt-1">
         {meetingInfo
-          ? `${meetingInfo.date} · ${meetingInfo.time} · ${meetingInfo.location}`
+          ? `${meetingInfo.date} · ${meetingInfo.location}`
           : mode === "roulette"
             ? "결정 피로 0%, 재미는 플러스!"
             : "모두의 의견을 모아 최적의 시간을 찾아요."}
